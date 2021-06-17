@@ -1,0 +1,6 @@
+*.pyc
+pydymenu.egg-info/
+build/
+dist/
+env/
+mydot.egg-info/
