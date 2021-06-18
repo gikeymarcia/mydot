@@ -2,6 +2,6 @@
 
 # re-run all tests if any .py files change in the project
 while true; do
-    sleep 1
     fd -e py | entr -rdc python -m pytest .
+    sleep 1
 done
