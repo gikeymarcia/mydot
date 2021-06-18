@@ -1,3 +1,5 @@
+# runtime dependencies
+-r requirements.txt
 # testing
 pytest
 
