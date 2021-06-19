@@ -85,6 +85,4 @@ def test_missing_DOTFILES_in_env(monkeypatch):
 def test_fixture_status(fake_repo_and_work_tree):
     repo = fake_repo_and_work_tree["bare"]
     work = fake_repo_and_work_tree["worktree"]
-    create = fake_repo_and_work_tree["create"]
-    print(repo, work, create)
-    assert False
+    assert mydot.Dotfiles(repo, work).list() == ["README", "project/__init__.py"]
