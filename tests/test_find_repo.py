@@ -11,18 +11,39 @@ import pytest
 
 @pytest.fixture
 def fake_repo_and_work_tree(tmp_path):
-    repo = tmp_path / "bare"
-    work = tmp_path / "work"
-    repo.mkdir()
-    work.mkdir()
-    print(f"bare repo: {repo}", f"work-tree: {work}", sep="\n")
-    # alias config='/usr/bin/git --git-dir=$DOTFILES --work-tree=$HOME'
-    create_cmd = ["git", "init", "--bare", repo]
-    a, b, c = (work / "greetings", work / "code", work / "README")
+    def super_touch(path_obj: Path):
+        if not path_obj.parent.exists():
+            path_obj.parent.mkdir(parents=True)
+        path_obj.touch()
+        path_obj.write_text("first commit")
+
+    def git_do(arg_list, git_dir, work_tree):
+        base = ["git", f"--git-dir={git_dir}", f"--work-tree={work_tree}"]
+        sp.run(base + arg_list)
+
+    # make and init --bare repo
+    bare = tmp_path / "bare"
+    bare.mkdir()
+    create_cmd = ["git", "init", "--bare", bare]
     sp.run(create_cmd)
-    sp.run(["ls", "-la", work])
-    sp.run(["ls", "-la", repo])
-    return {"repo": repo, "worktree": work, "create": create_cmd}
+    # sp.run(["ls", "-la", bare])
+
+    # make and populate work tree
+    work = tmp_path / "work"
+    work.mkdir()
+    files = [
+        Path.joinpath(work, f)
+        for f in ["README", "project/__init__.py", "LICENSE", "CHANGELOG"]
+    ]
+    [super_touch(f) for f in files]
+    git_do(["add", "-v", "--", files[0]], bare, work)
+    git_do(["commit", "-m", "first!"], bare, work)
+    files[0].write_text("more stuff")
+    git_do(["add", "-v", "--", files[1]], bare, work)
+    git_do(["config", "--local", "status.showUntrackedFiles", "no"], bare, work)
+    git_do(["status", "-s"], bare, work)
+    sp.run(["tree", work])
+    return {"bare": bare, "worktree": work, "create": create_cmd, "do": git_do}
 
 
 @pytest.fixture
@@ -62,7 +83,8 @@ def test_missing_DOTFILES_in_env(monkeypatch):
 
 
 def test_fixture_status(fake_repo_and_work_tree):
-    repo = fake_repo_and_work_tree["repo"]
+    repo = fake_repo_and_work_tree["bare"]
     work = fake_repo_and_work_tree["worktree"]
     create = fake_repo_and_work_tree["create"]
+    print(repo, work, create)
     assert False
