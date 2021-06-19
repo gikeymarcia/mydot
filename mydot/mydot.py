@@ -2,14 +2,16 @@
 # Mikey Garcia, @gikeymarcia
 # https://github.com/gikeymarcia/mydot
 
+# https://docs.python.org/3/library/functools.html?highlight=functools#functools.cached_property
+from functools import cached_property
 from pathlib import Path
 import subprocess as sp
-import os
+from os import getenv
 
 
 class Dotfiles:
     def __init__(self, git_dir=None, work_tree=None):
-        self.bare_repo = self.resolve_repo_location(git_dir)
+        self.bare_repo = self._resolve_repo_location(git_dir)
         self.work_tree = Path(work_tree) if work_tree else Path.home()
         self._git_base = [
             "git",
@@ -17,25 +19,39 @@ class Dotfiles:
             f"--work-tree={self.work_tree}",
         ]
 
-    def get_short_status(self):
-        return sp.run(
-            self._git_base + ["status", "-s"], text=True, capture_output=True
-        ).stdout.rstrip()
-
-    def resolve_repo_location(self, path_string):
+    def _resolve_repo_location(self, path_string):
         if path_string:
             return Path(path_string)
         else:
-            if env_val := os.getenv("DOTFILES", default=None):
+            if env_val := getenv("DOTFILES", default=None):
                 return Path(env_val)
             else:
                 raise KeyError("Could not find environment value for 'DOTFILES'")
 
-    def list(self):
-        status_out = self.get_short_status()
-        lines = status_out.split("\n")
-        files = ["".join(fp.split()[1:]) for fp in lines]
-        return files
+    @cached_property
+    def short_status(self):
+        return sp.run(
+            self._git_base + ["status", "-s"], text=True, capture_output=True
+        ).stdout.rstrip()
+
+    @cached_property
+    def tracked(self):
+        cmd = self._git_base + ["ls-tree", "--full-tree", "--full-name", "-r", "HEAD"]
+        out = sp.run(cmd, text=True, capture_output=True).stdout.strip()
+        lines = out.split("\n")
+        tracked = [item.split("\t")[-1] for item in lines]
+        return tracked
+
+    @cached_property
+    def staged_adds(self):
+        lines = self.short_status.split("\n")
+        return [" ".join(fp.split()[1:]) for fp in lines if fp[0] == "A"]
+
+    @cached_property
+    def list_all(self):
+        adds = self.staged_adds
+        tracked = self.tracked
+        return sorted(adds + tracked)
 
 
 # vim: foldlevel=99 :

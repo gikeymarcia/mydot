@@ -26,7 +26,6 @@ def fake_repo_and_work_tree(tmp_path):
     bare.mkdir()
     create_cmd = ["git", "init", "--bare", bare]
     sp.run(create_cmd)
-    # sp.run(["ls", "-la", bare])
 
     # make and populate work tree
     work = tmp_path / "work"
@@ -37,6 +36,7 @@ def fake_repo_and_work_tree(tmp_path):
     ]
     [super_touch(f) for f in files]
     git_do(["add", "-v", "--", files[0]], bare, work)
+    git_do(["add", "-v", "--", files[2]], bare, work)
     git_do(["commit", "-m", "first!"], bare, work)
     files[0].write_text("more stuff")
     git_do(["add", "-v", "--", files[1]], bare, work)
@@ -82,7 +82,22 @@ def test_missing_DOTFILES_in_env(monkeypatch):
     assert except_info.type is KeyError
 
 
-def test_fixture_status(fake_repo_and_work_tree):
+def test_tracked(fake_repo_and_work_tree):
     repo = fake_repo_and_work_tree["bare"]
     work = fake_repo_and_work_tree["worktree"]
-    assert mydot.Dotfiles(repo, work).list() == ["README", "project/__init__.py"]
+    assert mydot.Dotfiles(repo, work).tracked == ["LICENSE", "README"]
+
+
+def test_add_staged(fake_repo_and_work_tree):
+    repo = fake_repo_and_work_tree["bare"]
+    work = fake_repo_and_work_tree["worktree"]
+    assert mydot.Dotfiles(repo, work).list_all == [
+        "LICENSE",
+        "README",
+        "project/__init__.py",
+    ]
+
+
+# TODO:
+# - files with spaces
+# - files renamed
