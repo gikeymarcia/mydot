@@ -36,6 +36,7 @@ class Dotfiles:
 
     @cached_property
     def tracked(self):
+        # TODO: try this: $ git ls-files --others --cached
         cmd = self._git_base + ["ls-tree", "--full-tree", "--full-name", "-r", "HEAD"]
         out = sp.run(cmd, text=True, capture_output=True).stdout.strip()
         lines = out.split("\n")
