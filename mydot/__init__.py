@@ -1,5 +1,5 @@
-from .dotfiles import Dotfiles
-from .console import my_theme
+from mydot.dotfiles import Dotfiles
+from mydot.console import console
 
 __version__ = "0.1.0"
-__all__ = ["Dotfiles"]
+__all__ = ["Dotfiles", "console"]

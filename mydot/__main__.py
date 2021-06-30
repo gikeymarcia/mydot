@@ -1,3 +1,4 @@
+# Mikey Garcia, @gikeymarcia
 import argparse
 from pathlib import Path
 from typing import Union
@@ -9,7 +10,12 @@ from mydot import Dotfiles
 from mydot.console import my_theme, console
 
 
-def rich_text(rich_markup: str, theme: Union[None, Theme] = None, **rich_print_opts):
+def rich_text(
+    rich_markup: str,
+    theme: Union[None, Theme] = None,
+    **rich_print_opts,
+) -> str:
+    """Accept rich markup and return stylized text suitable for print()."""
     temp_console = Console(theme=theme)
     with temp_console.capture() as formatted:
         temp_console.print(rich_markup, **rich_print_opts)
@@ -24,7 +30,6 @@ rich_str = {
         "[cool]Manage[/] and [edit]edit[/] [code]$HOME[/] dotfiles "
         "using [strong]Python + git[/] = [bold red]<3[/]",
         theme=my_theme,
-        justify="left",
     ),
     "epilog": rich_text(
         "For more about dotfiles see: [link]https://www.atlassian.com/git/tutorials/dotfiles[/]",
@@ -57,7 +62,7 @@ group.add_argument(
     help="Show list of all files in the repo",
     action="store_true",
 )
-args = parser.parse_args(["--edit"])
+args = parser.parse_args(["-ls"])
 
 if args.edit:
     console.log("EDIT", log_locals=True)

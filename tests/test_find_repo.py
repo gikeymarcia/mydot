@@ -101,3 +101,5 @@ def test_add_staged(fake_repo_and_work_tree):
 # TODO:
 # - files with spaces
 # - files renamed
+
+# vim: foldlevel=4:
