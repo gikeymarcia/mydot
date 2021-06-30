@@ -1,13 +1,13 @@
 # Mikey Garcia, @gikeymarcia
 import argparse
-from pathlib import Path
 from typing import Union
 
 from rich.console import Console
 from rich.theme import Theme
 
+import mydot
 from mydot import Dotfiles
-from mydot.console import my_theme, console
+from mydot.console import console, my_theme
 
 
 def rich_text(
@@ -21,8 +21,6 @@ def rich_text(
         temp_console.print(rich_markup, **rich_print_opts)
     return formatted.get().strip()
 
-
-console.print("[strong]rich console print[/]", justify="center")
 
 rich_str = {
     "prog": rich_text("[code]python -m mydot[/]", theme=my_theme),
@@ -62,14 +60,17 @@ group.add_argument(
     help="Show list of all files in the repo",
     action="store_true",
 )
-args = parser.parse_args(["-ls"])
+# args = parser.parse_args(["--status"])
+args = parser.parse_args()
+dfs = Dotfiles()
 
 if args.edit:
-    console.log("EDIT", log_locals=True)
+    dfs.edit_files()
 elif args.status:
-    console.log("STATUS", log_locals=True)
+    dfs.show_status()
 elif args.list:
-    console.log("LIST", log_locals=True)
+    for dotfile in dfs.list_all:
+        print(dotfile)
 else:
     parser.parse_args(["-h"])
 
