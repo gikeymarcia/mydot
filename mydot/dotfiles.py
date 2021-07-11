@@ -25,22 +25,38 @@ class Dotfiles:
         work_tree: Union[str, None] = None,
     ):
         self.bare_repo = self._resolve_repo_location(git_dir)
-        self.work_tree = Path(work_tree) if work_tree is not None else Path.home()
+        self.work_tree = self._resolve_work_tree_location(work_tree)
         self._git_base = [
             "git",
             f"--git-dir={self.bare_repo}",
             f"--work-tree={self.work_tree}",
         ]
+        console.log(f"{self.bare_repo = }")
+        console.log(f"{self.work_tree = }")
+        console.log(f"{self._git_base = }")
         chdir(self.work_tree)
 
-    def _resolve_repo_location(self, path_string) -> Path:
-        if path_string:
-            return Path(path_string)
+    def _resolve_repo_location(self, path_loc: Union[str, None]) -> Path:
+        if path_loc:
+            return Path(path_loc)
         else:
             if env_val := getenv("DOTFILES", default=None):
                 return Path(env_val)
             else:
                 raise KeyError("Could not find environment value for 'DOTFILES'")
+
+    @staticmethod
+    def _resolve_work_tree_location(work_tree_str: Union[str, None]) -> Path:
+        if work_tree_str is None:
+            return Path.home()
+        else:
+            work_tree = Path(work_tree_str)
+            if work_tree.is_dir():
+                return work_tree
+            else:
+                raise OSError(
+                    "Missing work-tree directory!\n" f"{work_tree} doesn't exist"
+                )
 
     def show_status(self) -> None:
         """Short pretty formatted info on current repo."""
@@ -54,8 +70,6 @@ class Dotfiles:
         select = fzf(all_dfs, prompt="Pick file(s) to edit: ", multi=True)
         if select is None:
             sys_exit("No selection made. Cancelling action.")
-        elif type(select) is str:
-            raise ValueError
         else:
             return select
 
@@ -72,6 +86,11 @@ class Dotfiles:
                 cmd = [self.editor, "-o"] + edits
             console.log(edits, log_locals=True)
             sp.run(cmd)
+
+    def add(self) -> Union[list[str], None]:
+        adding = fzf(self.list_all, prompt="Choose changes to add: ", multi=True)
+        if adding:
+            return [adding] if type(adding) is str else adding
 
     @cached_property
     def editor(self) -> str:
