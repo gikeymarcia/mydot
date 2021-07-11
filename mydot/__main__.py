@@ -1,25 +1,9 @@
 # Mikey Garcia, @gikeymarcia
 import argparse
-from typing import Union
-
-from rich.console import Console
-from rich.theme import Theme
 
 import mydot
 from mydot import Dotfiles
-from mydot.console import console, my_theme
-
-
-def rich_text(
-    rich_markup: str,
-    theme: Union[None, Theme] = None,
-    **rich_print_opts,
-) -> str:
-    """Accept rich markup and return stylized text suitable for print()."""
-    temp_console = Console(theme=theme)
-    with temp_console.capture() as formatted:
-        temp_console.print(rich_markup, **rich_print_opts)
-    return formatted.get().strip()
+from mydot.console import console, my_theme, rich_text
 
 
 rich_str = {
@@ -55,17 +39,25 @@ group.add_argument(
     action="store_true",
 )
 group.add_argument(
+    "-a",
+    "--add",
+    help="Interactively add changes your dotfiles",
+    action="store_true",
+)
+group.add_argument(
     "-ls",
     "--list",
     help="Show list of all files in the repo",
     action="store_true",
 )
-# args = parser.parse_args(["--status"])
-args = parser.parse_args()
+args = parser.parse_args(["-a"])
+# args = parser.parse_args()
 dfs = Dotfiles()
 
 if args.edit:
     dfs.edit_files()
+elif args.add:
+    console.print(f"selected dotfiles = {dfs.add()}")
 elif args.status:
     dfs.show_status()
 elif args.list:
