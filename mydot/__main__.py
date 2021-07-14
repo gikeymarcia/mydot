@@ -1,7 +1,6 @@
 # Mikey Garcia, @gikeymarcia
 import argparse
 
-import mydot
 from mydot import Dotfiles
 from mydot.console import console, my_theme, rich_text
 
@@ -50,14 +49,14 @@ group.add_argument(
     help="Show list of all files in the repo",
     action="store_true",
 )
-args = parser.parse_args(["-a"])
-# args = parser.parse_args()
+args = parser.parse_args()
 dfs = Dotfiles()
 
 if args.edit:
     dfs.edit_files()
 elif args.add:
-    console.print(f"selected dotfiles = {dfs.add()}")
+    adds = dfs.add()
+    console.print(f"selected dotfiles = {adds}")
 elif args.status:
     dfs.show_status()
 elif args.list:
