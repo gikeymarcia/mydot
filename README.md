@@ -1,17 +1,20 @@
-# Python Project Template
+# mydot -- A Python Module for managing dotfiles
 
-Basic shell to begin a new project.
+## Usage
 
-### Features
+```bash
+python -m pip install --user mydot
+python -m mydot --status
+python -m mydot --edit
+python -m mydot --add
+```
 
-- `bump2version`
-- `setup.py`
+### Source of Truth
 
-# Getting Going
+This project is available on [GitHub][github] and [GitLab][gitlab]. Each push to 
+`master` automatically goes to both so choose whichever platform you prefer.
 
-1. Name your package; e.g., `mydot`
-2. Edit `setup.py` with `name=mydot`
-3. Rename `mv package/ mydot/`
-4. Update `.bumpversion.cfg`
-    - rename `[bumpversion:file:mydot/__init__.py]` to 
-      `[bumpversion:file:mydot/__init__.py]`
+[github]: <https://github.com/gikeymarcia/mydot>
+"Follow and Contribute on GitHub"
+[gitlab]: <https://gitlab.com/gikeymarcia/mydot>
+"Follow and Contribute on GitLab"
