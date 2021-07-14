@@ -16,6 +16,7 @@ from pydymenu import fzf
 
 # Project Modules
 from mydot.console import console
+from mydot.exceptions import MissingRepositoryLocation
 
 
 class Dotfiles:
@@ -43,7 +44,9 @@ class Dotfiles:
             if env_val := getenv("DOTFILES", default=None):
                 return Path(env_val)
             else:
-                raise KeyError("Could not find environment value for 'DOTFILES'")
+                raise MissingRepositoryLocation(
+                    "Could not find environment value for 'DOTFILES'"
+                )
 
     @staticmethod
     def _resolve_work_tree_location(work_tree_str: Union[str, None]) -> Path:

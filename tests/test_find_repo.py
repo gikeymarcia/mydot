@@ -4,6 +4,7 @@ import subprocess as sp
 
 # my project
 import mydot
+from mydot.exceptions import MissingRepositoryLocation
 
 # from pypi
 import pytest
@@ -77,9 +78,9 @@ def test_default_repo_and_work_tree(monkeypatch, tmpdir):
 
 def test_missing_DOTFILES_in_env(monkeypatch):
     monkeypatch.delenv("DOTFILES", raising=False)
-    with pytest.raises(KeyError) as except_info:
+    with pytest.raises(MissingRepositoryLocation) as except_info:
         _ = mydot.Dotfiles()
-    assert except_info.type is KeyError
+    assert except_info.type is MissingRepositoryLocation
 
 
 def test_tracked(fake_repo_and_work_tree):

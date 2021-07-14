@@ -1,0 +1,2 @@
+class MissingRepositoryLocation(Exception):
+    pass
