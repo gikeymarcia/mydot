@@ -7,7 +7,7 @@
 from functools import cached_property
 from os import chdir, getenv
 from pathlib import Path
-import subprocess as sp
+from subprocess import run
 from sys import exit as sys_exit
 from typing import Union
 
@@ -32,21 +32,21 @@ class Dotfiles:
             f"--git-dir={self.bare_repo}",
             f"--work-tree={self.work_tree}",
         ]
-        console.log(f"{self.bare_repo = }")
-        console.log(f"{self.work_tree = }")
-        console.log(f"{self._git_base = }")
+        # console.log(f"{self.bare_repo = }")
+        # console.log(f"{self.work_tree = }")
+        # console.log(f"{self._git_base = }")
         chdir(self.work_tree)
 
     def _resolve_repo_location(self, path_loc: Union[str, None]) -> Path:
-        if path_loc:
-            return Path(path_loc)
-        else:
+        if path_loc is None:
             if env_val := getenv("DOTFILES", default=None):
                 return Path(env_val)
             else:
                 raise MissingRepositoryLocation(
-                    "Could not find environment value for 'DOTFILES'"
+                    "Could not find an environment value for 'DOTFILES'"
                 )
+        else:
+            return Path(path_loc)
 
     @staticmethod
     def _resolve_work_tree_location(work_tree_str: Union[str, None]) -> Path:
@@ -64,13 +64,12 @@ class Dotfiles:
     def show_status(self) -> None:
         """Short pretty formatted info on current repo."""
         console.print("Branches:", style="header")
-        sp.run(self._git_base + ["branch", "-a"])
+        run(self._git_base + ["branch", "-a"])
         console.print("\nModified Files:", style="header")
-        sp.run(self._git_base + ["status", "-s"])
+        run(self._git_base + ["status", "-s"])
 
     def choose_files(self) -> list[str]:
-        all_dfs = self.list_all
-        select = fzf(all_dfs, prompt="Pick file(s) to edit: ", multi=True)
+        select = fzf(self.list_all, prompt="Pick file(s) to edit: ", multi=True)
         if select is None:
             sys_exit("No selection made. Cancelling action.")
         else:
@@ -88,12 +87,26 @@ class Dotfiles:
             else:
                 cmd = [self.editor, "-o"] + edits
             console.log(edits, log_locals=True)
-            sp.run(cmd)
+            run(cmd)
 
     def add(self) -> Union[list[str], None]:
-        adding = fzf(self.list_all, prompt="Choose changes to add: ", multi=True)
-        if adding:
-            return [adding] if type(adding) is str else adding
+        git = " ".join(self._git_base).strip()
+        modified = self.modified
+        if modified is None:
+            sys_exit("Clean work tree. No unstaged changes present.")
+        else:
+            adding = fzf(
+                modified,
+                prompt="Choose changes to add: ",
+                multi=True,
+                preview=f"{git} diff --color --minimal HEAD -- " + "{}",
+            )
+        if adding is None:
+            sys_exit("No selection made. No files will be staged.")
+        else:
+            cmd = self._git_base + ["add", "-v", "--"] + adding
+            run(cmd)
+            return adding
 
     @cached_property
     def editor(self) -> str:
@@ -102,7 +115,7 @@ class Dotfiles:
 
     @cached_property
     def short_status(self) -> str:
-        return sp.run(
+        return run(
             self._git_base + ["status", "-s"], text=True, capture_output=True
         ).stdout.rstrip()
 
@@ -110,7 +123,7 @@ class Dotfiles:
     def tracked(self) -> list[str]:
         # TODO: try this: $ git ls-files --others --cached
         cmd = self._git_base + ["ls-tree", "--full-tree", "--full-name", "-r", "HEAD"]
-        out = sp.run(cmd, text=True, capture_output=True).stdout.strip()
+        out = run(cmd, text=True, capture_output=True).stdout.strip()
         lines = out.split("\n")
         tracked = [item.split("\t")[-1] for item in lines]
         return tracked
@@ -125,6 +138,11 @@ class Dotfiles:
         adds = self.staged_adds
         tracked = self.tracked
         return sorted(adds + tracked)
+
+    @cached_property
+    def modified(self) -> Union[list[str], None]:
+        # TODO: return None when no files are modified
+        return [l.split()[1] for l in self.short_status.split("\n")]
 
 
 # vim: foldlevel=5 :

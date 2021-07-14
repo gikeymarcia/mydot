@@ -49,9 +49,9 @@ def fake_repo_and_work_tree(tmp_path):
 
 @pytest.fixture
 def defined_dot():
-    return mydot.Dotfiles(
-        git_dir="/home/mikey/.config/dotfiles", work_tree="/home/mikey"
-    )
+    dots = str(Path.home() / ".config/dotfiles")
+    work = str(Path.home())
+    return mydot.Dotfiles(git_dir=dots, work_tree=work)
 
 
 def test_import_module():
@@ -59,17 +59,17 @@ def test_import_module():
 
 
 def test_constructor():
-    assert mydot.Dotfiles(
-        git_dir="/home/mikey/.config/dotfiles", work_tree="/home/mikey"
-    )
+    dots = str(Path.home() / ".config/dotfiles")
+    work = str(Path.home())
+    assert mydot.Dotfiles(git_dir=dots, work_tree=work)
 
 
 def test_defined_repo_and_work_tree(defined_dot):
-    assert defined_dot.bare_repo == Path("/home/mikey/.config/dotfiles")
-    assert defined_dot.work_tree == Path("/home/mikey/")
+    assert defined_dot.bare_repo == Path.home() / ".config/dotfiles"
+    assert defined_dot.work_tree == Path.home()
 
 
-def test_default_repo_and_work_tree(monkeypatch, tmpdir):
+def test_env_defined_repo_with_default_work_tree(monkeypatch, tmpdir):
     monkeypatch.setenv("DOTFILES", str(tmpdir))
     default_vals = mydot.Dotfiles()
     assert default_vals.bare_repo == Path(str(tmpdir))
@@ -89,7 +89,16 @@ def test_tracked(fake_repo_and_work_tree):
     assert mydot.Dotfiles(repo, work).tracked == ["LICENSE", "README"]
 
 
-def test_add_staged(fake_repo_and_work_tree):
+def test_list_modified(fake_repo_and_work_tree):
+    repo = fake_repo_and_work_tree["bare"]
+    work = fake_repo_and_work_tree["worktree"]
+    assert mydot.Dotfiles(repo, work).modified == [
+        "README",
+        "project/__init__.py",
+    ]
+
+
+def test_list_all(fake_repo_and_work_tree):
     repo = fake_repo_and_work_tree["bare"]
     work = fake_repo_and_work_tree["worktree"]
     assert mydot.Dotfiles(repo, work).list_all == [
@@ -102,5 +111,6 @@ def test_add_staged(fake_repo_and_work_tree):
 # TODO:
 # - files with spaces
 # - files renamed
+# - Modified / Added / Rename
 
 # vim: foldlevel=4:
