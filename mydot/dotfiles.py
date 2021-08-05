@@ -142,6 +142,13 @@ class Dotfiles:
     @cached_property
     def modified(self) -> Union[list[str], None]:
         # TODO: return None when no files are modified
+        mods = self._git_base + ["ls-files", "--modified"]
+        proc = run(mods, capture_output=True, text=True)
+        if proc.returncode == 0:
+            return proc.stdout.strip().split("\n")
+        else:
+            return None
+        sys_exit("stopping")
         return [l.split()[1] for l in self.short_status.split("\n")]
 
 
