@@ -9,7 +9,7 @@ from os import chdir, getenv
 from pathlib import Path
 from subprocess import run
 from sys import exit as sys_exit
-from typing import Union
+from typing import Union, List
 
 # PyPi
 from pydymenu import fzf
@@ -68,7 +68,7 @@ class Dotfiles:
         console.print("\nModified Files:", style="header")
         run(self._git_base + ["status", "-s"])
 
-    def choose_files(self) -> list[str]:
+    def choose_files(self) -> List[str]:
         select = fzf(self.list_all, prompt="Pick file(s) to edit: ", multi=True)
         if select is None:
             sys_exit("No selection made. Cancelling action.")
@@ -89,7 +89,7 @@ class Dotfiles:
             console.log(edits, log_locals=True)
             run(cmd)
 
-    def add(self) -> Union[list[str], None]:
+    def add(self) -> Union[List[str], None]:
         git = " ".join(self._git_base).strip()
         modified = self.modified
         if modified is None:
@@ -120,7 +120,7 @@ class Dotfiles:
         ).stdout.rstrip()
 
     @cached_property
-    def tracked(self) -> list[str]:
+    def tracked(self) -> List[str]:
         # TODO: try this: $ git ls-files --others --cached
         cmd = self._git_base + ["ls-tree", "--full-tree", "--full-name", "-r", "HEAD"]
         out = run(cmd, text=True, capture_output=True).stdout.strip()
@@ -129,18 +129,18 @@ class Dotfiles:
         return tracked
 
     @cached_property
-    def staged_adds(self) -> list[str]:
+    def staged_adds(self) -> List[str]:
         lines = self.short_status.split("\n")
         return [" ".join(fp.split()[1:]) for fp in lines if fp[0] == "A"]
 
     @cached_property
-    def list_all(self) -> list[str]:
+    def list_all(self) -> List[str]:
         adds = self.staged_adds
         tracked = self.tracked
         return sorted(adds + tracked)
 
     @cached_property
-    def modified(self) -> Union[list[str], None]:
+    def modified(self) -> Union[List[str], None]:
         # TODO: return None when no files are modified
         mods = self._git_base + ["ls-files", "--modified"]
         proc = run(mods, capture_output=True, text=True)
