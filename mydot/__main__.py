@@ -32,10 +32,7 @@ group.add_argument(
     action="store_true",
 )
 group.add_argument(
-    "-s",
-    "--status",
-    help="Show status of dotfiles repo",
-    action="store_true",
+    "-s", "--status", help="Show status of dotfiles repo", action="store_true"
 )
 group.add_argument(
     "-a",
@@ -64,5 +61,15 @@ elif args.list:
         print(dotfile)
 else:
     parser.parse_args(["-h"])
+
+# TODO: Usability at the CLI
+# Move from --flags to subcommands
+# https://docs.python.org/3/library/argparse.html#sub-commands
+# d. (stat) default
+# d. (add) fzf modified or add -v for List[files]
+# d. (branch) switch to or checkout branches
+# d. (tar) make tarball (optionally take path for file)
+# d. (create) Initiate bare repo and ask which file to append the aliases to?
+#              [.bashrc, .bash_aliases, .bash_profile, .profile, .zshrc]
 
 # vim: foldlevel=4:

@@ -4,3 +4,4 @@ build/
 dist/
 env/
 mydot.egg-info/
+.git/
