@@ -1,50 +1,130 @@
 # standard library
 from pathlib import Path
 import subprocess as sp
+from pprint import pprint as pp
 
-# my project
+import pytest
+
 import mydot
 from mydot.exceptions import MissingRepositoryLocation
 
-# from pypi
-import pytest
-
 
 @pytest.fixture
-def fake_repo_and_work_tree(tmp_path):
-    def super_touch(path_obj: Path):
-        if not path_obj.parent.exists():
-            path_obj.parent.mkdir(parents=True)
-        path_obj.touch()
-        path_obj.write_text("first commit")
+def fake_repo(tmp_path):
+    class GitContoller:
+        def __init__(self, git_dir: Path, worktree: Path):
+            self.git_dir = git_dir
+            self.worktree = worktree
 
-    def git_do(arg_list, git_dir, work_tree):
-        base = ["git", f"--git-dir={git_dir}", f"--work-tree={work_tree}"]
-        sp.run(base + arg_list)
+        def __call__(self, args: list) -> sp.CompletedProcess:
+            cmd = ["git", f"--git-dir={self.git_dir}", f"--work-tree={self.worktree}"]
+            return sp.run(cmd + args, capture_output=True, text=True)
 
-    # make and init --bare repo
+    # make worktree, init --bare repo, instantiate a GitContoller
     bare = tmp_path / "bare"
-    bare.mkdir()
-    create_cmd = ["git", "init", "--bare", bare]
-    sp.run(create_cmd)
+    worktree = tmp_path / "worktree"
+    [d.mkdir() for d in [bare, worktree]]
+    init = ["git", "init", "--bare", bare]
+    sp.run(init)
+    git_action = GitContoller(bare, worktree)
 
-    # make and populate work tree
-    work = tmp_path / "work"
-    work.mkdir()
-    files = [
-        Path.joinpath(work, f)
-        for f in ["README", "project/__init__.py", "LICENSE", "CHANGELOG"]
+    # populate worktree stages: first > edit > delete > stage > create
+    repofiles = [
+        {
+            "path": worktree / "unmodified",
+            "stages": ["first"],
+            "appears in": ["list"],
+        },
+        {
+            "path": worktree / "space folder/unmodified",
+            "stages": ["first"],
+            "appears in": ["list"],
+        },
+        {
+            "path": worktree / "modified staged changes",
+            "stages": ["first"],
+            "appears in": ["staged", "list", "restore"],
+        },
+        {
+            "path": worktree / "modified unstaged changes",
+            "stages": ["first", "edit"],
+            "appears in": ["add", "list", "restore"],
+        },
+        {
+            "path": worktree / "deleted staged",
+            "stages": ["first", "delete", "stage"],
+            "appears in": ["deleted", "staged", "restore"],
+        },
+        {
+            "path": worktree / "in folder/modified staged",
+            "stages": ["first", "edit", "stage"],
+            "appears in": ["staged", "list", "restore"],
+        },
+        {
+            "path": worktree / "in folder/modified unstaged",
+            "stages": ["first", "edit"],
+            "appears in": ["add", "list", "restore"],
+        },
+        {
+            "path": worktree / "deleted unstaged",
+            "stages": ["first", "delete"],
+            "appears in": ["add", "list", "restore"],
+        },
+        {
+            "path": worktree / "oldname",
+            "stages": ["first"],
+            "appears in": ["staged"],
+        },
+        {
+            "path": worktree / "newfile",
+            "stages": ["create"],
+            "appears in": [],
+        },
+        {
+            "path": worktree / "rename",
+            "stages": ["rename"],
+            "appears in": ["list", "staged"],
+            "from": worktree / "oldname",
+        },
     ]
-    [super_touch(f) for f in files]
-    git_do(["add", "-v", "--", files[0]], bare, work)
-    git_do(["add", "-v", "--", files[2]], bare, work)
-    git_do(["commit", "-m", "first!"], bare, work)
-    files[0].write_text("more stuff")
-    git_do(["add", "-v", "--", files[1]], bare, work)
-    git_do(["config", "--local", "status.showUntrackedFiles", "no"], bare, work)
-    git_do(["status", "-s"], bare, work)
-    sp.run(["tree", work])
-    return {"bare": bare, "worktree": work, "create": create_cmd, "do": git_do}
+
+    # first: make files and commit
+    for file in repofiles:
+        fp, stages = file["path"], file["stages"]
+        if "first" in stages:
+            if not fp.parent.is_dir():
+                fp.parent.mkdir(parents=True)
+            fp.touch()
+            fp.write_text(f"data for {fp}")
+            git_action(["add", fp])
+    git_action(["commit", "-m", "first commit"])
+
+    # edit / delete / stage / create
+    for file in repofiles:
+        fp, stages = file["path"], file["stages"]
+        if "edit" in stages:
+            fp.write_text(f"edited content for {fp}")
+        if "delete" in stages:
+            fp.unlink()
+        if "rename" in stages:
+            oldname = file["from"]
+            git_action(["mv", oldname, fp])
+        if "stage" in stages:
+            git_action(["add", fp])
+        if "create" in stages:
+            fp.touch()
+            fp.write_text(f"new file {fp}")
+
+    return {
+        "bare": bare,
+        "worktree": worktree,
+        "init": init,
+        "git": git_action,
+        "repofiles": repofiles,
+        "df": mydot.Dotfiles(bare, worktree),
+        "status": git_action(["status"]).stdout,
+        "tree": sp.run(["tree", "-C", "-p", worktree], capture_output=True),
+    }
 
 
 @pytest.fixture
@@ -56,12 +136,6 @@ def defined_dot():
 
 def test_import_module():
     assert mydot
-
-
-def test_constructor():
-    dots = str(Path.home() / ".config/dotfiles")
-    work = str(Path.home())
-    assert mydot.Dotfiles(git_dir=dots, work_tree=work)
 
 
 def test_defined_repo_and_work_tree(defined_dot):
@@ -83,34 +157,49 @@ def test_missing_DOTFILES_in_env(monkeypatch):
     assert except_info.type is MissingRepositoryLocation
 
 
-def test_tracked(fake_repo_and_work_tree):
-    repo = fake_repo_and_work_tree["bare"]
-    work = fake_repo_and_work_tree["worktree"]
-    assert mydot.Dotfiles(repo, work).tracked == ["LICENSE", "README"]
-
-
-def test_list_modified(fake_repo_and_work_tree):
-    repo = fake_repo_and_work_tree["bare"]
-    work = fake_repo_and_work_tree["worktree"]
-    assert mydot.Dotfiles(repo, work).modified == [
-        "README",
-        "project/__init__.py",
+def test_fake_repo_list_all(fake_repo):
+    worktree, repofiles = fake_repo["worktree"], fake_repo["repofiles"]
+    dotfiles = fake_repo["df"]
+    list_files = [
+        str(f["path"].relative_to(worktree))
+        for f in repofiles
+        if "list" in f["appears in"]
     ]
-
-
-def test_list_all(fake_repo_and_work_tree):
-    repo = fake_repo_and_work_tree["bare"]
-    work = fake_repo_and_work_tree["worktree"]
-    assert mydot.Dotfiles(repo, work).list_all == [
-        "LICENSE",
-        "README",
-        "project/__init__.py",
-    ]
+    dir(dotfiles)
+    assert sorted(list_files) == dotfiles.list_all
 
 
 # TODO:
 # - files with spaces
 # - files renamed
 # - Modified / Added / Rename
+# subcommand ADD:
+#   test: "adding" deleted files
+#   test: only listing files with unstaged changes (git ls-files?)
+
+
+# def test_tracked(fake_repo_and_work_tree):
+#     repo = fake_repo_and_work_tree["bare"]
+#     work = fake_repo_and_work_tree["worktree"]
+#     assert mydot.Dotfiles(repo, work).tracked == ["LICENSE", "README"]
+
+
+# def test_list_modified(fake_repo_and_work_tree):
+#     repo = fake_repo_and_work_tree["bare"]
+#     work = fake_repo_and_work_tree["worktree"]
+#     assert mydot.Dotfiles(repo, work).modified == [
+#         "README",
+#         "project/__init__.py",
+#     ]
+
+
+# def test_list_all(fake_repo_and_work_tree):
+#     repo = fake_repo_and_work_tree["bare"]
+#     work = fake_repo_and_work_tree["worktree"]
+#     assert mydot.Dotfiles(repo, work).list_all == [
+#         "LICENSE",
+#         "README",
+#         "project/__init__.py",
+#     ]
 
 # vim: foldlevel=4:
