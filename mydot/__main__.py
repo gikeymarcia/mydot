@@ -53,7 +53,7 @@ if args.edit:
     dfs.edit_files()
 elif args.add:
     adds = dfs.add()
-    console.print(f"selected dotfiles = {adds}")
+    # console.print(f"selected dotfiles = {adds}")
 elif args.status:
     dfs.show_status()
 elif args.list:
