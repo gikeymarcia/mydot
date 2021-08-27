@@ -2,6 +2,7 @@
 -r requirements.txt
 # testing
 pytest
+ipdb
 
 # dev tooling
 pynvim
