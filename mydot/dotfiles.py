@@ -16,7 +16,7 @@ from pydymenu import fzf
 
 # Project Modules
 from mydot.console import console
-from mydot.exceptions import MissingRepositoryLocation
+from mydot.exceptions import MissingRepositoryLocation, WorktreeMissing
 
 
 class Dotfiles:
@@ -25,8 +25,8 @@ class Dotfiles:
         git_dir: Union[str, None] = None,
         work_tree: Union[str, None] = None,
     ):
-        self.bare_repo = self._resolve_repo_location(git_dir)
-        self.work_tree = self._resolve_work_tree_location(work_tree)
+        self.bare_repo: Path = self._resolve_repo_location(git_dir)
+        self.work_tree: Path = self._resolve_work_tree_location(work_tree)
         self._git_base = [
             "git",
             f"--git-dir={self.bare_repo}",
@@ -43,7 +43,7 @@ class Dotfiles:
                 return Path(env_val)
             else:
                 raise MissingRepositoryLocation(
-                    "Could not find an environment value for 'DOTFILES'"
+                    "No repository specified and no value for $DOTFILES in environment."
                 )
         else:
             return Path(path_loc)
@@ -57,7 +57,7 @@ class Dotfiles:
             if work_tree.is_dir():
                 return work_tree
             else:
-                raise OSError(
+                raise WorktreeMissing(
                     "Missing work-tree directory!\n" f"{work_tree} doesn't exist"
                 )
 
@@ -91,12 +91,11 @@ class Dotfiles:
 
     def add(self) -> Union[List[str], None]:
         git = " ".join(self._git_base).strip()
-        modified = self.modified
-        if modified is None:
+        if self.modified is None:
             sys_exit("Clean work tree. No unstaged changes present.")
         else:
             adding = fzf(
-                modified,
+                self.modified,
                 prompt="Choose changes to add: ",
                 multi=True,
                 preview=f"{git} diff --color --minimal HEAD -- " + "{}",
@@ -152,4 +151,4 @@ class Dotfiles:
         return [l.split()[1] for l in self.short_status.split("\n")]
 
 
-# vim: foldlevel=5 :
+# vim: foldlevel=1 :
