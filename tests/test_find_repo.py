@@ -176,6 +176,8 @@ def test_fake_repo_list_all(fake_repo):
 # subcommand ADD:
 #   test: "adding" deleted files
 #   test: only listing files with unstaged changes (git ls-files?)
+#   test: make sure things don't break with a clean worktree
+# example: -ls didn't work until I modified staged_adds()
 
 
 # def test_tracked(fake_repo_and_work_tree):

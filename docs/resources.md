@@ -25,7 +25,7 @@ Followed along with the excellent [RealPython tour of pathlib][pathlib] and read
 up when needed in [the documentation][doc-pathlib]
 
 [doc-pathlib]: <https://docs.python.org/3/library/pathlib.html>
-"pathlib -- object oriented file system paths"
+"pathlib: object oriented file system paths"
 [pathlib]: <https://realpython.com/python-pathlib/>
 "Python 3's pathlib module -- taming the file system"
 [first time git setup]: <https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup>

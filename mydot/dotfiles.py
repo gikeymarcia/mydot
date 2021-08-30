@@ -10,6 +10,7 @@ from pathlib import Path
 from subprocess import run
 from sys import exit as sys_exit
 from typing import Union, List
+from shutil import which
 
 # PyPi
 from pydymenu import fzf
@@ -32,12 +33,11 @@ class Dotfiles:
             f"--git-dir={self.bare_repo}",
             f"--work-tree={self.work_tree}",
         ]
-        # console.log(f"{self.bare_repo = }")
-        # console.log(f"{self.work_tree = }")
-        # console.log(f"{self._git_base = }")
+        self.run_from: Path = Path.cwd()
         chdir(self.work_tree)
 
-    def _resolve_repo_location(self, path_loc: Union[str, None]) -> Path:
+    @staticmethod
+    def _resolve_repo_location(path_loc: Union[str, None]) -> Path:
         if path_loc is None:
             if env_val := getenv("DOTFILES", default=None):
                 return Path(env_val)
@@ -49,17 +49,15 @@ class Dotfiles:
             return Path(path_loc)
 
     @staticmethod
-    def _resolve_work_tree_location(work_tree_str: Union[str, None]) -> Path:
-        if work_tree_str is None:
+    def _resolve_work_tree_location(dir: Union[str, None]) -> Path:
+        if dir is None:
             return Path.home()
         else:
-            work_tree = Path(work_tree_str)
-            if work_tree.is_dir():
+            if (work_tree := Path(dir)).is_dir():
                 return work_tree
             else:
-                raise WorktreeMissing(
-                    "Missing work-tree directory!\n" f"{work_tree} doesn't exist"
-                )
+                msg = "Missing work-tree directory!\n" f"{work_tree} doesn't exist"
+                raise WorktreeMissing(msg)
 
     def show_status(self) -> None:
         """Short pretty formatted info on current repo."""
@@ -68,8 +66,25 @@ class Dotfiles:
         console.print("\nModified Files:", style="header")
         run(self._git_base + ["status", "-s"])
 
+    @cached_property
+    def preview_app(self) -> str:
+        """Return: bat > batcat > cat"""
+        if which("bat"):
+            return "bat --color=always"
+        elif which("batcat"):
+            return "batcat --color=always"
+        elif which("highlight"):
+            return "highlight -O ansi"
+        else:
+            return "cat"
+
     def choose_files(self) -> List[str]:
-        select = fzf(self.list_all, prompt="Pick file(s) to edit: ", multi=True)
+        select = fzf(
+            self.list_all,
+            prompt="Pick file(s) to edit: ",
+            multi=True,
+            preview=f"{self.preview_app}" + " {}",
+        )
         if select is None:
             sys_exit("No selection made. Cancelling action.")
         else:
@@ -86,7 +101,7 @@ class Dotfiles:
                 cmd = [self.editor, edits[0]]
             else:
                 cmd = [self.editor, "-o"] + edits
-            console.log(edits, log_locals=True)
+            # console.log(edits, log_locals=True)
             run(cmd)
 
     def add(self) -> Union[List[str], None]:
@@ -122,15 +137,17 @@ class Dotfiles:
     def tracked(self) -> List[str]:
         # TODO: try this: $ git ls-files --others --cached
         cmd = self._git_base + ["ls-tree", "--full-tree", "--full-name", "-r", "HEAD"]
-        out = run(cmd, text=True, capture_output=True).stdout.strip()
-        lines = out.split("\n")
+        lines = run(cmd, text=True, capture_output=True).stdout.strip().split("\n")
         tracked = [item.split("\t")[-1] for item in lines]
         return tracked
 
     @cached_property
     def staged_adds(self) -> List[str]:
-        lines = self.short_status.split("\n")
-        return [" ".join(fp.split()[1:]) for fp in lines if fp[0] == "A"]
+        if len(self.short_status) == 0:
+            return []
+        else:
+            lines = self.short_status.split("\n")
+            return [" ".join(fp.split()[1:]) for fp in lines if fp[0] == "A"]
 
     @cached_property
     def list_all(self) -> List[str]:

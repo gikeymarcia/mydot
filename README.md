@@ -2,20 +2,25 @@
 
 ## Quick Start
 
-1. Configure `bash` shell:
+1. Configure `bash`
 
     ```bash
-    # Environment variable specifying where to store dotfiles
+    # add to the bottom of your `~/.bashrc`:
     export DOTFILES="$HOME/.config/dotfiles"
     alias config="/usr/bin/git --git-dir=$DOTFILES --work-tree=$HOME"
+    alias d.="python -m mydot"
     ```
+
+    First we define a variable which will point to where our dotfiles are stored then making two aliaes. The first alias is to interact with the repo directly and the other is for invoking `mydot`.
+
 2. Initialize dotfiles repository
 
     ```bash
-    # Initialize repository
     mkdir -pv $DOTFILES
     git init --bare $DOTFILES
     ```
+
+    Create the directory (and any parents) then initialize the bare repo
 
 3. Confirm and configure dotfiles repo
 
@@ -34,10 +39,10 @@
 
     ```bash
     python -m pip install --user mydot
-    python -m mydot --help
-    python -m mydot --status
-    python -m mydot --edit
-    python -m mydot --add
+    d. --edit
+    d. --help
+    d. --status
+    d. --add
     ```
 
 ### Source of Truth
