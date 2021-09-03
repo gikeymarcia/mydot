@@ -150,10 +150,27 @@ class Dotfiles:
             return [" ".join(fp.split()[1:]) for fp in lines if fp[0] == "A"]
 
     @cached_property
+    def renames(self) -> List[str]:
+        if len(self.short_status) == 0:
+            return []
+        else:
+            lines = self.short_status.split("\n")
+            rename_lines = [l for l in lines if l[0] == "R"]
+            if len(rename_lines) > 0:
+                rename_files = [f.split(" -> ")[1] for f in rename_lines]
+                return rename_files
+            else:
+                return []
+            # print(f"{rename_lines =}")
+            # renames = [" ".join(fp.split()[1:]) for fp in lines if fp[0] == "A"]
+            # return renames
+
+    @cached_property
     def list_all(self) -> List[str]:
         adds = self.staged_adds
         tracked = self.tracked
-        return sorted(adds + tracked)
+        renames = self.renames
+        return sorted(adds + tracked + renames)
 
     @cached_property
     def modified(self) -> Union[List[str], None]:

@@ -25,7 +25,7 @@ def fake_repo(tmp_path):
     worktree = tmp_path / "worktree"
     [d.mkdir() for d in [bare, worktree]]
     init = ["git", "init", "--bare", bare]
-    sp.run(init)
+    sp.run(init, capture_output=True)
     git_action = GitContoller(bare, worktree)
 
     # populate worktree stages: first > edit > delete > stage > create
@@ -160,13 +160,27 @@ def test_missing_DOTFILES_in_env(monkeypatch):
 def test_fake_repo_list_all(fake_repo):
     worktree, repofiles = fake_repo["worktree"], fake_repo["repofiles"]
     dotfiles = fake_repo["df"]
-    list_files = [
-        str(f["path"].relative_to(worktree))
-        for f in repofiles
-        if "list" in f["appears in"]
-    ]
-    dir(dotfiles)
-    assert sorted(list_files) == dotfiles.list_all
+    list_files = sorted(
+        [
+            str(f["path"].relative_to(worktree))
+            for f in repofiles
+            if "list" in f["appears in"]
+        ]
+    )
+    # dir(dotfiles)
+    print(dotfiles.short_status)
+
+    print(fake_repo["status"])
+    for f in list_files:
+        if f not in dotfiles.list_all:
+            print(f"missing from df: {f}")
+    for f in dotfiles.list_all:
+        if f not in list_files:
+            print(f"missing from list_files: {f}")
+
+    # print(f"list: {list_files}")
+    # print(f"dots: {dotfiles.list_all}")
+    assert list_files == dotfiles.list_all
 
 
 # TODO:
