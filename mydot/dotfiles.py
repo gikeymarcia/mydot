@@ -113,7 +113,7 @@ class Dotfiles:
                 self.modified,
                 prompt="Choose changes to add: ",
                 multi=True,
-                preview=f"{git} diff --color --minimal HEAD -- " + "{}",
+                preview=f"{git} diff --color --minimal -- " + "{}",
             )
         if adding is None:
             sys_exit("No selection made. No files will be staged.")
@@ -130,7 +130,9 @@ class Dotfiles:
     @cached_property
     def short_status(self) -> str:
         return run(
-            self._git_base + ["status", "-s"], text=True, capture_output=True
+            self._git_base + ["status", "-s", "--untracked-files=no", "--porcelain"],
+            text=True,
+            capture_output=True,
         ).stdout.rstrip()
 
     @cached_property
