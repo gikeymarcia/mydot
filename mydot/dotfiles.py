@@ -184,12 +184,11 @@ class Dotfiles:
 
     @cached_property
     def list_all(self) -> List[str]:
-        # pseudocode:
+        # TODO pseudocode:
         # (tracked - (deletes + oldnames)) + renames + adds
         adds = self.adds_staged
         tracked = self.tracked
         renames = self.renames
-        # TODO minus delete staged and old filenames
         return sorted(adds + tracked + renames)
 
     @property

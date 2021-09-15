@@ -2,7 +2,7 @@
 import argparse
 
 from mydot import Dotfiles
-from mydot.console import console, my_theme, rich_text
+from mydot.console import my_theme, rich_text
 
 
 rich_str = {
@@ -28,11 +28,14 @@ group = parser.add_mutually_exclusive_group()
 group.add_argument(
     "-e",
     "--edit",
-    help="Use fzf to interactively choose files to edit",
+    help="Use fzf to interactively choose file(s) to edit",
     action="store_true",
 )
 group.add_argument(
-    "-s", "--status", help="Show status of dotfiles repo", action="store_true"
+    "-s",
+    "--status",
+    help="Show status of dotfiles repo",
+    action="store_true",
 )
 group.add_argument(
     "-a",
