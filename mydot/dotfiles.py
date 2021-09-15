@@ -6,6 +6,7 @@
 # https://docs.python.org/3/library/functools.html?highlight=functools#functools.cached_property
 from functools import cached_property
 from os import chdir, getenv
+import re
 from pathlib import Path
 from subprocess import run
 from sys import exit as sys_exit
@@ -21,11 +22,14 @@ from mydot.exceptions import MissingRepositoryLocation, WorktreeMissing
 
 
 class Dotfiles:
+    """Power up control of your dotfiles with fzf and python."""
+
     def __init__(
         self,
-        git_dir: Union[str, None] = None,
-        work_tree: Union[str, None] = None,
+        git_dir: Union[Path, str, None] = None,
+        work_tree: Union[Path, str, None] = None,
     ):
+        """Define a 'git_dir' and 'work_tree' to begin."""
         self.bare_repo: Path = self._resolve_repo_location(git_dir)
         self.work_tree: Path = self._resolve_work_tree_location(work_tree)
         self._git_base = [
@@ -37,7 +41,12 @@ class Dotfiles:
         chdir(self.work_tree)
 
     @staticmethod
-    def _resolve_repo_location(path_loc: Union[str, None]) -> Path:
+    def _resolve_repo_location(path_loc: Union[str, Path, None]) -> Path:
+        """Decides which dotfile repository location will be used.
+
+        When None is given, try to read $DOTFILES from environment.
+        When a location is specified return it's Path
+        """
         if path_loc is None:
             if env_val := getenv("DOTFILES", default=None):
                 return Path(env_val)
@@ -46,29 +55,166 @@ class Dotfiles:
                     "No repository specified and no value for $DOTFILES in environment."
                 )
         else:
-            return Path(path_loc)
+            return Path(path_loc) if isinstance(path_loc, str) else path_loc
 
     @staticmethod
-    def _resolve_work_tree_location(dir: Union[str, None]) -> Path:
+    def _resolve_work_tree_location(dir: Union[Path, str, None]) -> Path:
+        """Define work tree location.
+
+        When None given presume Path.home()
+        """
         if dir is None:
             return Path.home()
         else:
-            if (work_tree := Path(dir)).is_dir():
+            work_tree = Path(dir) if isinstance(dir, str) else dir
+            if work_tree.is_dir():
                 return work_tree
             else:
                 msg = "Missing work-tree directory!\n" f"{work_tree} doesn't exist"
                 raise WorktreeMissing(msg)
 
     def show_status(self) -> None:
-        """Short pretty formatted info on current repo."""
+        """Short pretty formatted info about the repo state."""
         console.print("Branches:", style="header")
         run(self._git_base + ["branch", "-a"])
         console.print("\nModified Files:", style="header")
         run(self._git_base + ["status", "-s"])
 
+    def edit_files(self) -> List[str]:
+        """Interactively choose dotfiles to open in text editor."""
+        edits = fzf(
+            self.list_all,
+            prompt="Pick file(s) to edit: ",
+            multi=True,
+            preview=f"{self.preview_app}" + " {}",
+        )
+        if edits is None:
+            sys_exit("No selection made. Cancelling action.")
+        else:
+            if len(edits) == 1:
+                run([self.editor, edits[0]])
+            else:
+                run([self.editor, "-o"] + edits)
+            return edits
+
+    def add_changes(self) -> List[str]:
+        """Interactively choose modified files to add to the staging area."""
+        if self.modified_unstaged:
+            adding = fzf(
+                self.modified_unstaged,
+                prompt="Choose changes to add: ",
+                multi=True,
+                preview=f"{self._git_str} diff --color --minimal -- " + "{}",
+            )
+            if adding is None:
+                sys_exit("No selection made. No changes will be staged.")
+            else:
+                run(self._git_base + ["add", "-v", "--"] + adding)
+                return adding
+        else:
+            sys_exit("No unstaged changes to 'add'.")
+
+    def restore(self) -> List[str]:
+        """Interactively choose files to remove from the staging area."""
+        if self.modified_staged:
+            restores = fzf(
+                self.modified_staged,
+                prompt="Choose changes to remove from staging area: ",
+                multi=True,
+                preview=f"{self._git_str} diff --color --minimal HEAD -- " + "{}",
+            )
+            if restores is None:
+                sys_exit("No selection made. No files will be unstaged.")
+            else:
+                run(self._git_base + ["add", "-v", "--"] + restores)
+                return restores
+        else:
+            sys_exit("No staged changes to restore.")
+
+    @property
+    def short_status(self) -> List[str]:
+        def reformat_renames(m):
+            """Reformat renamed entry output from 'git status -z'.
+
+            New format: '\x00R[ MD] oldname -> rename\x00'
+            Important: this is different than the format stated in 'man git-status'
+            """
+            return "\x00" + m.group(1) + m.group(3) + " -> " + m.group(2) + "\x00"
+
+        output = run(
+            self._git_base
+            + ["status", "--short", "--untracked-files=no", "--porcelain", "-z"],
+            text=True,
+            capture_output=True,
+        ).stdout
+        renamed_regex = r"\x00(R[ MD] )(.*)\x00(.*)\x00"
+        # https://docs.python.org/3/library/re.html#text-munging
+        reformatted = re.sub(renamed_regex, reformat_renames, output).split("\x00")
+        return [file for file in reformatted if len(file) > 0]
+
+    @cached_property
+    def tracked(self) -> List[str]:
+        cmd = self._git_base + ["ls-tree", "--full-tree", "--full-name", "-r", "HEAD"]
+        lines = run(cmd, text=True, capture_output=True).stdout.strip().split("\n")
+        tracked = [item.split("\t")[-1] for item in lines]
+        # TODO: prune deleted staged, renamed old_names
+        return tracked
+
+    @cached_property
+    def adds_staged(self) -> List[str]:
+        if len(self.short_status) == 0:
+            return []
+        else:
+            # TODO this join seems wrong
+            return [
+                " ".join(fp.split()[1:]) for fp in self.short_status if fp[0] == "A"
+            ]
+
+    @cached_property
+    def renames(self) -> List[str]:
+        if len(self.short_status) == 0:
+            return []
+        else:
+            rename_lines = [l for l in self.short_status if l[0] == "R"]
+            if len(rename_lines) > 0:
+                rename_files = [f.split(" -> ")[1] for f in rename_lines]
+                return rename_files
+            else:
+                return []
+
+    @cached_property
+    def list_all(self) -> List[str]:
+        # pseudocode:
+        # (tracked - (deletes + oldnames)) + renames + adds
+        adds = self.adds_staged
+        tracked = self.tracked
+        renames = self.renames
+        # TODO minus delete staged and old filenames
+        return sorted(adds + tracked + renames)
+
+    @property
+    def deleted_staged(self) -> List[str]:
+        """Returns all files staged for deletion."""
+        return [stat[3:] for stat in self.short_status if stat[0] == "D"]
+
+    @property
+    def modified_staged(self) -> List[str]:
+        """Returns files with staged modifications."""
+        return [stat[3:] for stat in self.short_status if stat[0] == "M"]
+
+    @property
+    def modified_unstaged(self) -> List[str]:
+        """Returns all files with unstaged modifications or Deletions."""
+        return [stat[3:] for stat in self.short_status if stat[1] in ["M", "D"]]
+
+    @cached_property
+    def _git_str(self) -> str:
+        """String representation of _git_base command."""
+        return " ".join(self._git_base).strip()
+
     @cached_property
     def preview_app(self) -> str:
-        """Return: bat > batcat > cat"""
+        """Return: bat > batcat > highlight > cat."""
         if which("bat"):
             return "bat --color=always"
         elif which("batcat"):
@@ -78,113 +224,17 @@ class Dotfiles:
         else:
             return "cat"
 
-    def choose_files(self) -> List[str]:
-        select = fzf(
-            self.list_all,
-            prompt="Pick file(s) to edit: ",
-            multi=True,
-            preview=f"{self.preview_app}" + " {}",
-        )
-        if select is None:
-            sys_exit("No selection made. Cancelling action.")
-        else:
-            return select
-
-    def edit_files(self) -> None:
-        """Interactively choose dotfiles to open in text editor.
-
-        Searches for $EDITOR environment variable
-        If not found; defaults to vim
-        """
-        if edits := self.choose_files():
-            if len(edits) <= 1:
-                cmd = [self.editor, edits[0]]
-            else:
-                cmd = [self.editor, "-o"] + edits
-            # console.log(edits, log_locals=True)
-            run(cmd)
-
-    def add(self) -> Union[List[str], None]:
-        git = " ".join(self._git_base).strip()
-        if self.modified is None:
-            sys_exit("Clean work tree. No unstaged changes present.")
-        else:
-            adding = fzf(
-                self.modified,
-                prompt="Choose changes to add: ",
-                multi=True,
-                preview=f"{git} diff --color --minimal -- " + "{}",
-            )
-        if adding is None:
-            sys_exit("No selection made. No files will be staged.")
-        else:
-            cmd = self._git_base + ["add", "-v", "--"] + adding
-            run(cmd)
-            return adding
-
     @cached_property
     def editor(self) -> str:
-        """Return the name of the environment defined $EDITOR."""
-        return getenv("EDITOR", "vim")
-
-    @cached_property
-    def short_status(self) -> str:
-        return run(
-            self._git_base + ["status", "-s", "--untracked-files=no", "--porcelain"],
-            text=True,
-            capture_output=True,
-        ).stdout.rstrip()
-
-    @cached_property
-    def tracked(self) -> List[str]:
-        # TODO: try this: $ git ls-files --others --cached
-        cmd = self._git_base + ["ls-tree", "--full-tree", "--full-name", "-r", "HEAD"]
-        lines = run(cmd, text=True, capture_output=True).stdout.strip().split("\n")
-        tracked = [item.split("\t")[-1] for item in lines]
-        return tracked
-
-    @cached_property
-    def staged_adds(self) -> List[str]:
-        if len(self.short_status) == 0:
-            return []
+        """Preference: $EDITOR > nvim > vim > nano > emacs."""
+        if env := getenv("EDITOR", None):
+            return env
         else:
-            lines = self.short_status.split("\n")
-            return [" ".join(fp.split()[1:]) for fp in lines if fp[0] == "A"]
-
-    @cached_property
-    def renames(self) -> List[str]:
-        if len(self.short_status) == 0:
-            return []
-        else:
-            lines = self.short_status.split("\n")
-            rename_lines = [l for l in lines if l[0] == "R"]
-            if len(rename_lines) > 0:
-                rename_files = [f.split(" -> ")[1] for f in rename_lines]
-                return rename_files
+            for prog in ["nvim", "vim", "nano", "emacs"]:
+                if bin := which(prog):
+                    return bin
             else:
-                return []
-            # print(f"{rename_lines =}")
-            # renames = [" ".join(fp.split()[1:]) for fp in lines if fp[0] == "A"]
-            # return renames
-
-    @cached_property
-    def list_all(self) -> List[str]:
-        adds = self.staged_adds
-        tracked = self.tracked
-        renames = self.renames
-        return sorted(adds + tracked + renames)
-
-    @cached_property
-    def modified(self) -> Union[List[str], None]:
-        # TODO: return None when no files are modified
-        mods = self._git_base + ["ls-files", "--modified"]
-        proc = run(mods, capture_output=True, text=True)
-        if proc.returncode == 0:
-            return proc.stdout.strip().split("\n")
-        else:
-            return None
-        sys_exit("stopping")
-        return [l.split()[1] for l in self.short_status.split("\n")]
+                sys_exit("Cannot find a suitable editor, and boy did we look!")
 
 
 # vim: foldlevel=1 :

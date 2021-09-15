@@ -46,19 +46,27 @@ group.add_argument(
     help="Show list of all files in the repo",
     action="store_true",
 )
+group.add_argument(
+    "-r",
+    "--restore",
+    help="Choose files to unstage for the next commit.",
+    action="store_true",
+)
 args = parser.parse_args()
 dfs = Dotfiles()
 
 if args.edit:
     dfs.edit_files()
 elif args.add:
-    adds = dfs.add()
+    adds = dfs.add_changes()
     # console.print(f"selected dotfiles = {adds}")
 elif args.status:
     dfs.show_status()
 elif args.list:
     for dotfile in dfs.list_all:
         print(dotfile)
+elif args.restore:
+    dfs.restore()
 else:
     parser.parse_args(["-h"])
 

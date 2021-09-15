@@ -1,7 +1,6 @@
 # standard library
 from pathlib import Path
 import subprocess as sp
-from pprint import pprint as pp
 
 import pytest
 
@@ -48,7 +47,7 @@ def fake_repo(tmp_path):
         {
             "path": worktree / "modified unstaged changes",
             "stages": ["first", "edit"],
-            "appears in": ["add", "list", "restore"],
+            "appears in": ["add", "list", "restore", "modified_unstaged"],
         },
         {
             "path": worktree / "deleted staged",
@@ -58,17 +57,17 @@ def fake_repo(tmp_path):
         {
             "path": worktree / "in folder/modified staged",
             "stages": ["first", "edit", "stage"],
-            "appears in": ["staged", "list", "restore"],
+            "appears in": ["staged", "list", "restore", "modified_staged"],
         },
         {
             "path": worktree / "in folder/modified unstaged",
             "stages": ["first", "edit"],
-            "appears in": ["add", "list", "restore"],
+            "appears in": ["add", "list", "restore", "modified_unstaged"],
         },
         {
             "path": worktree / "deleted unstaged",
             "stages": ["first", "delete"],
-            "appears in": ["add", "list", "restore"],
+            "appears in": ["add", "list", "restore", "modified_unstaged"],
         },
         {
             "path": worktree / "oldname",
@@ -129,8 +128,8 @@ def fake_repo(tmp_path):
 
 @pytest.fixture
 def defined_dot():
-    dots = str(Path.home() / ".config/dotfiles")
-    work = str(Path.home())
+    dots = Path.home() / ".config/dotfiles"
+    work = Path.home()
     return mydot.Dotfiles(git_dir=dots, work_tree=work)
 
 
@@ -157,34 +156,74 @@ def test_missing_DOTFILES_in_env(monkeypatch):
     assert except_info.type is MissingRepositoryLocation
 
 
-def test_fake_repo_list_all(fake_repo):
-    worktree, repofiles = fake_repo["worktree"], fake_repo["repofiles"]
+def test_fake_repo_deleted_staged(fake_repo):
     dotfiles = fake_repo["df"]
-    list_files = sorted(
+    deleted = sorted(
         [
-            str(f["path"].relative_to(worktree))
-            for f in repofiles
-            if "list" in f["appears in"]
+            str(f["path"].relative_to(fake_repo["worktree"]))
+            for f in fake_repo["repofiles"]
+            if "deleted" in f["appears in"]
         ]
     )
-    # dir(dotfiles)
-    print(dotfiles.short_status)
+    assert dotfiles.deleted_staged == deleted
+    for file in deleted:
+        fake_repo["git"](["restore", "--staged", "--", file])
+    assert dotfiles.deleted_staged == []
 
-    print(fake_repo["status"])
-    for f in list_files:
-        if f not in dotfiles.list_all:
-            print(f"missing from df: {f}")
-    for f in dotfiles.list_all:
-        if f not in list_files:
-            print(f"missing from list_files: {f}")
 
-    # print(f"list: {list_files}")
-    # print(f"dots: {dotfiles.list_all}")
-    assert list_files == dotfiles.list_all
+def test_fake_repo_modfied_staged(fake_repo):
+    dotfiles = fake_repo["df"]
+    modified_staged = sorted(
+        [
+            str(f["path"].relative_to(fake_repo["worktree"]))
+            for f in fake_repo["repofiles"]
+            if "modified_staged" in f["appears in"]
+        ]
+    )
+    assert dotfiles.modified_staged == modified_staged
+    for file in modified_staged:
+        fake_repo["git"](["restore", "--staged", "--", file])
+    assert dotfiles.modified_staged == []
+
+
+def test_fake_repo_modfied_UNstaged(fake_repo):
+    dotfiles = fake_repo["df"]
+    modified_unstaged = sorted(
+        [
+            str(f["path"].relative_to(fake_repo["worktree"]))
+            for f in fake_repo["repofiles"]
+            if "modified_unstaged" in f["appears in"]
+        ]
+    )
+    assert dotfiles.modified_unstaged == modified_unstaged
+    for file in modified_unstaged:
+        fake_repo["git"](["add", "--", file])
+    assert dotfiles.modified_unstaged == []
+
+
+# def test_fake_repo_list_all(fake_repo):
+#     worktree, repofiles = fake_repo["worktree"], fake_repo["repofiles"]
+#     dotfiles = fake_repo["df"]
+#     list_files = sorted(
+#         [
+#             str(f["path"].relative_to(worktree))
+#             for f in repofiles
+#             if "list" in f["appears in"]
+#         ]
+#     )
+#     print(f"{list_files= }")
+#     print(dotfiles.short_status)
+#     print(fake_repo["status"])
+#     for f in list_files:
+#         if f not in dotfiles.list_all:
+#             print(f"missing from df: {f}")
+#     for f in dotfiles.list_all:
+#         if f not in list_files:
+#             print(f"shouldn't be in list_files: {f}")
+#     assert list_files == dotfiles.list_all
 
 
 # TODO:
-# - files with spaces
 # - files renamed
 # - Modified / Added / Rename
 # subcommand ADD:
@@ -193,29 +232,4 @@ def test_fake_repo_list_all(fake_repo):
 #   test: make sure things don't break with a clean worktree
 # example: -ls didn't work until I modified staged_adds()
 
-
-# def test_tracked(fake_repo_and_work_tree):
-#     repo = fake_repo_and_work_tree["bare"]
-#     work = fake_repo_and_work_tree["worktree"]
-#     assert mydot.Dotfiles(repo, work).tracked == ["LICENSE", "README"]
-
-
-# def test_list_modified(fake_repo_and_work_tree):
-#     repo = fake_repo_and_work_tree["bare"]
-#     work = fake_repo_and_work_tree["worktree"]
-#     assert mydot.Dotfiles(repo, work).modified == [
-#         "README",
-#         "project/__init__.py",
-#     ]
-
-
-# def test_list_all(fake_repo_and_work_tree):
-#     repo = fake_repo_and_work_tree["bare"]
-#     work = fake_repo_and_work_tree["worktree"]
-#     assert mydot.Dotfiles(repo, work).list_all == [
-#         "LICENSE",
-#         "README",
-#         "project/__init__.py",
-#     ]
-
-# vim: foldlevel=4:
+# vim: foldlevel=1:
