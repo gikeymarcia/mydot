@@ -26,11 +26,16 @@ class Dotfiles:
 
     def __init__(
         self,
-        git_dir: Union[Path, str, None] = None,
+        local_bare_repo: Union[Path, str, None] = None,
         work_tree: Union[Path, str, None] = None,
     ):
-        """Define a 'git_dir' and 'work_tree' to begin."""
-        self.bare_repo: Path = self._resolve_repo_location(git_dir)
+        """Create a new Dotfiles object to manage your repository.
+
+        When no locations are passed the default locations are:
+        - "$DOTFILES" for the bare repository
+        - "$HOME" for the work tree
+        """
+        self.bare_repo: Path = self._resolve_repo_location(local_bare_repo)
         self.work_tree: Path = self._resolve_work_tree_location(work_tree)
         self._git_base = [
             "git",
