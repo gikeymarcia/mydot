@@ -1,6 +1,7 @@
 # standard library
 from pathlib import Path
 import subprocess as sp
+from typing import List
 
 import pytest
 
@@ -125,15 +126,19 @@ def fake_repo(tmp_path):
     }
 
 
+def appears_in(fake: dict, key: str) -> List[str]:
+    """Filters a fake_repo return list where the 'key' in 'appears_in'."""
+    filtered = [
+        str(file["path"].relative_to(fake["worktree"]))
+        for file in fake["repofiles"]
+        if key in file["appears in"]
+    ]
+    return sorted(filtered)
+
+
 def test_deleted_staged(fake_repo):
     dotfiles = fake_repo["df"]
-    deleted = sorted(
-        [
-            str(f["path"].relative_to(fake_repo["worktree"]))
-            for f in fake_repo["repofiles"]
-            if "deleted" in f["appears in"]
-        ]
-    )
+    deleted = appears_in(fake_repo, "deleted")
     assert dotfiles.deleted_staged == deleted
     for file in deleted:
         fake_repo["git"](["restore", "--staged", "--", file])
@@ -143,13 +148,7 @@ def test_deleted_staged(fake_repo):
 
 def test_modfied_staged(fake_repo):
     dotfiles = fake_repo["df"]
-    modified_staged = sorted(
-        [
-            str(f["path"].relative_to(fake_repo["worktree"]))
-            for f in fake_repo["repofiles"]
-            if "modified_staged" in f["appears in"]
-        ]
-    )
+    modified_staged = appears_in(fake_repo, "modified_staged")
     assert dotfiles.modified_staged == modified_staged
     for file in modified_staged:
         fake_repo["git"](["restore", "--staged", "--", file])
@@ -159,13 +158,7 @@ def test_modfied_staged(fake_repo):
 
 def test_modfied_UNstaged(fake_repo):
     dotfiles = fake_repo["df"]
-    modified_unstaged = sorted(
-        [
-            str(f["path"].relative_to(fake_repo["worktree"]))
-            for f in fake_repo["repofiles"]
-            if "modified_unstaged" in f["appears in"]
-        ]
-    )
+    modified_unstaged = appears_in(fake_repo, "modified_unstaged")
     assert dotfiles.modified_unstaged == modified_unstaged
     for file in modified_unstaged:
         fake_repo["git"](["add", "--", file])
