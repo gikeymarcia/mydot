@@ -116,9 +116,10 @@ class Dotfiles:
 
     def restore(self) -> List[str]:
         """Interactively choose files to remove from the staging area."""
-        if self.modified_staged:
+        restorables = sorted(list(set(self.modified_staged + self.deleted_staged)))
+        if restorables:
             restores = fzf(
-                self.modified_staged,
+                restorables,
                 prompt="Choose changes to remove from staging area: ",
                 multi=True,
                 preview=f"{self._git_str} diff --color --minimal HEAD -- " + "{}",
@@ -126,13 +127,21 @@ class Dotfiles:
             if restores is None:
                 sys_exit("No selection made. No files will be unstaged.")
             else:
-                run(self._git_base + ["add", "-v", "--"] + restores)
+                run(self._git_base + ["restore", "--staged", "--"] + restores)
                 return restores
         else:
-            sys_exit("No staged changes to restore.")
+            self.show_status()
+            sys_exit("\nNo staged changes to restore.")
 
-    @property
+    @cached_property
     def short_status(self) -> List[str]:
+        output = run(
+            self._git_base
+            + ["status", "--short", "--untracked-files=no", "--porcelain", "-z"],
+            text=True,
+            capture_output=True,
+        ).stdout
+
         def reformat_renames(m):
             """Reformat renamed entry output from 'git status -z'.
 
@@ -141,16 +150,10 @@ class Dotfiles:
             """
             return "\x00" + m.group(1) + m.group(3) + " -> " + m.group(2) + "\x00"
 
-        output = run(
-            self._git_base
-            + ["status", "--short", "--untracked-files=no", "--porcelain", "-z"],
-            text=True,
-            capture_output=True,
-        ).stdout
         renamed_regex = r"\x00(R[ MD] )(.*)\x00(.*)\x00"
         # https://docs.python.org/3/library/re.html#text-munging
         reformatted = re.sub(renamed_regex, reformat_renames, output).split("\x00")
-        return [file for file in reformatted if len(file) > 0]
+        return [statusline for statusline in reformatted if len(statusline) > 0]
 
     @cached_property
     def tracked(self) -> List[str]:

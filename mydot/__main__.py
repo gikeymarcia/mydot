@@ -52,24 +52,23 @@ group.add_argument(
 group.add_argument(
     "-r",
     "--restore",
-    help="Choose files to unstage for the next commit.",
+    help="Use fzf to interactively choose file(s) to remove from the staging area.",
     action="store_true",
 )
 args = parser.parse_args()
-dfs = Dotfiles()
+dotfiles = Dotfiles()
 
 if args.edit:
-    dfs.edit_files()
+    dotfiles.edit_files()
 elif args.add:
-    adds = dfs.add_changes()
-    # console.print(f"selected dotfiles = {adds}")
+    dotfiles.add_changes()
 elif args.status:
-    dfs.show_status()
+    dotfiles.show_status()
 elif args.list:
-    for dotfile in dfs.list_all:
+    for dotfile in dotfiles.list_all:
         print(dotfile)
 elif args.restore:
-    dfs.restore()
+    dotfiles.restore()
 else:
     parser.parse_args(["-h"])
 
