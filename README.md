@@ -11,7 +11,10 @@
     alias d.="python -m mydot"
     ```
 
-    First we define a variable which will point to where our dotfiles are stored then making two aliaes. The first alias is to interact with the repo directly and the other is for invoking `mydot`.
+    First we define a variable which will point to where our dotfiles are stored then make two aliases. 
+
+    - `config`: interact with the repo directly
+    - `d.` invoke the module's command line interface
 
 2. Initialize dotfiles repository
 
@@ -39,10 +42,13 @@
 
     ```bash
     python -m pip install --user mydot
-    d. --edit
+    # try out the commands
     d. --help
-    d. --status
+    d. --edit
     d. --add
+    d. --restore
+    d. --status
+    d. --ls
     ```
 
 ### Source of Truth

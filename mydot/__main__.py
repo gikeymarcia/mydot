@@ -28,7 +28,19 @@ group = parser.add_mutually_exclusive_group()
 group.add_argument(
     "-e",
     "--edit",
-    help="Use fzf to interactively choose file(s) to edit",
+    help="Use fzf to interactively choose file(s) to open in your $EDITOR",
+    action="store_true",
+)
+group.add_argument(
+    "-a",
+    "--add",
+    help="Use fzf to interactively stage changes to your dofiles",
+    action="store_true",
+)
+group.add_argument(
+    "-r",
+    "--restore",
+    help="Use fzf to interactively choose file(s) to remove from the staging area.",
     action="store_true",
 )
 group.add_argument(
@@ -38,21 +50,9 @@ group.add_argument(
     action="store_true",
 )
 group.add_argument(
-    "-a",
-    "--add",
-    help="Interactively add changes your dotfiles",
-    action="store_true",
-)
-group.add_argument(
     "-ls",
     "--list",
-    help="Show list of all files in the repo",
-    action="store_true",
-)
-group.add_argument(
-    "-r",
-    "--restore",
-    help="Use fzf to interactively choose file(s) to remove from the staging area.",
+    help="list all files in the repo",
     action="store_true",
 )
 args = parser.parse_args()
