@@ -15,7 +15,7 @@ def test_import_module():
 def defined_dot():
     dots = Path.home() / ".config/dotfiles"
     work = Path.home()
-    return mydot.Dotfiles(git_dir=dots, work_tree=work)
+    return mydot.Dotfiles(local_bare_repo=dots, work_tree=work)
 
 
 def test_defined_repo_and_work_tree(defined_dot):
