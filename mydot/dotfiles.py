@@ -123,7 +123,9 @@ class Dotfiles:
 
     def restore(self) -> List[str]:
         """Interactively choose files to remove from the staging area."""
-        restorables = sorted(list(set(self.modified_staged + self.deleted_staged)))
+        restorables = sorted(
+            list(set(self.modified_staged + self.deleted_staged + self.adds_staged))
+        )
         if restorables:
             restores = fzf(
                 restorables,
