@@ -32,47 +32,53 @@ def fake_repo(tmp_path):
         {
             "path": worktree / "unmodified",
             "stages": ["first"],
-            "appears in": ["list"],
+            "appears in": ["list", "tracked"],
         },
         {
             "path": worktree / "space folder/unmodified",
             "stages": ["first"],
-            "appears in": ["list"],
+            "appears in": ["list", "tracked"],
         },
         {
             "path": worktree / "modified staged changes",
             "stages": ["first"],
-            "appears in": ["staged", "list", "restore"],
+            "appears in": ["staged", "list", "restore", "tracked"],
         },
         {
             "path": worktree / "modified unstaged changes",
             "stages": ["first", "edit"],
-            "appears in": ["add", "list", "restore", "modified_unstaged"],
+            "appears in": ["add", "list", "restore", "modified_unstaged", "tracked"],
         },
         {
             "path": worktree / "deleted staged",
             "stages": ["first", "delete", "stage"],
-            "appears in": ["deleted", "staged", "restore"],
+            "appears in": ["deleted", "staged", "restore", "tracked"],
         },
         {
             "path": worktree / "in folder/modified staged",
             "stages": ["first", "edit", "stage"],
-            "appears in": ["staged", "list", "restore", "modified_staged"],
+            "appears in": ["staged", "list", "restore", "modified_staged", "tracked"],
         },
         {
             "path": worktree / "in folder/modified unstaged",
             "stages": ["first", "edit"],
-            "appears in": ["add", "list", "restore", "modified_unstaged"],
+            "appears in": ["add", "list", "restore", "modified_unstaged", "tracked"],
         },
         {
             "path": worktree / "deleted unstaged",
             "stages": ["first", "delete"],
-            "appears in": ["add", "list", "restore", "modified_unstaged"],
+            "appears in": ["add", "list", "restore", "modified_unstaged", "tracked"],
         },
         {
             "path": worktree / "oldname",
             "stages": ["first"],
-            "appears in": ["staged"],
+            "appears in": ["staged", "oldname", "tracked"],
+        },
+        {
+            "path": worktree / "rename",
+            "stages": ["rename"],
+            "appears in": ["list", "staged"],
+            "from": worktree / "oldname",
         },
         {
             "path": worktree / "newfile",
@@ -80,10 +86,9 @@ def fake_repo(tmp_path):
             "appears in": [],
         },
         {
-            "path": worktree / "rename",
-            "stages": ["rename"],
-            "appears in": ["list", "staged"],
-            "from": worktree / "oldname",
+            "path": worktree / "add me-fool",
+            "stages": ["create", "add"],
+            "appears in": ["adds_staged"],
         },
     ]
 
@@ -113,6 +118,8 @@ def fake_repo(tmp_path):
         if "create" in stages:
             fp.touch()
             fp.write_text(f"new file {fp}")
+        if "add" in stages:
+            git_action(["add", fp])
 
     return {
         "bare": bare,
@@ -136,14 +143,44 @@ def appears_in(fake: dict, key: str) -> List[str]:
     return sorted(filtered)
 
 
+def test_tracked(fake_repo):
+    dotfiles = fake_repo["df"]
+    tracked = appears_in(fake_repo, "tracked")
+    assert dotfiles.tracked == tracked
+
+
+# def test_list_all(fake_repo):
+#     dotfiles = fake_repo["df"]
+#     list_all = appears_in(fake_repo, "list")
+#     [print(line) for line in fake_repo["status"].split("\n")]
+#     assert dotfiles.list_all == list_all
+
+
+def test_oldnames(fake_repo):
+    dotfiles = fake_repo["df"]
+    old = appears_in(fake_repo, "oldname")
+    assert dotfiles.oldnames == old
+
+
+def test_adds_staged(fake_repo):
+    dotfiles = fake_repo["df"]
+    adds = appears_in(fake_repo, "adds_staged")
+    [print(line) for line in fake_repo["status"].split("\n")]
+    assert dotfiles.adds_staged == adds
+    for file in adds:
+        fake_repo["git"](["restore", "--staged", file])
+    dotfiles.freshen()
+    assert dotfiles.adds_staged == []
+
+
 def test_deleted_staged(fake_repo):
     dotfiles = fake_repo["df"]
     deleted = appears_in(fake_repo, "deleted")
     assert dotfiles.deleted_staged == deleted
     for file in deleted:
         fake_repo["git"](["restore", "--staged", "--", file])
-    new_df = mydot.Dotfiles(fake_repo["bare"], fake_repo["worktree"])
-    assert new_df.deleted_staged == []
+    dotfiles.freshen()
+    assert dotfiles.deleted_staged == []
 
 
 def test_modfied_staged(fake_repo):
@@ -152,8 +189,8 @@ def test_modfied_staged(fake_repo):
     assert dotfiles.modified_staged == modified_staged
     for file in modified_staged:
         fake_repo["git"](["restore", "--staged", "--", file])
-    new_df = mydot.Dotfiles(fake_repo["bare"], fake_repo["worktree"])
-    assert new_df.modified_staged == []
+    dotfiles.freshen()
+    assert dotfiles.modified_staged == []
 
 
 def test_modfied_UNstaged(fake_repo):
@@ -162,8 +199,8 @@ def test_modfied_UNstaged(fake_repo):
     assert dotfiles.modified_unstaged == modified_unstaged
     for file in modified_unstaged:
         fake_repo["git"](["add", "--", file])
-    new_df = mydot.Dotfiles(fake_repo["bare"], fake_repo["worktree"])
-    assert new_df.modified_unstaged == []
+    dotfiles.freshen()
+    assert dotfiles.modified_unstaged == []
 
 
 # def test_list_all(fake_repo):

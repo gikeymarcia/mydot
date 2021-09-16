@@ -100,6 +100,7 @@ class Dotfiles:
                 run([self.editor, edits[0]])
             else:
                 run([self.editor, "-o"] + edits)
+            self.freshen()
             return edits
 
     def add_changes(self) -> List[str]:
@@ -115,6 +116,7 @@ class Dotfiles:
                 sys_exit("No selection made. No changes will be staged.")
             else:
                 run(self._git_base + ["add", "-v", "--"] + adding)
+                self.freshen()
                 return adding
         else:
             sys_exit("No unstaged changes to 'add'.")
@@ -133,6 +135,7 @@ class Dotfiles:
                 sys_exit("No selection made. No files will be unstaged.")
             else:
                 run(self._git_base + ["restore", "--staged", "--"] + restores)
+                self.freshen()
                 return restores
         else:
             self.show_status()
@@ -162,21 +165,25 @@ class Dotfiles:
 
     @cached_property
     def tracked(self) -> List[str]:
-        cmd = self._git_base + ["ls-tree", "--full-tree", "--full-name", "-r", "HEAD"]
-        lines = run(cmd, text=True, capture_output=True).stdout.strip().split("\n")
-        tracked = [item.split("\t")[-1] for item in lines]
-        # TODO: prune deleted staged, renamed old_names
-        return tracked
+        output_lines = run(
+            self._git_base
+            + ["ls-tree", "--full-tree", "--full-name", "-r", "HEAD", "-z"],
+            text=True,
+            capture_output=True,
+        ).stdout.split("\x00")
+        return [row.split("\t")[-1] for row in output_lines if len(row) > 0]
 
     @cached_property
     def adds_staged(self) -> List[str]:
-        if len(self.short_status) == 0:
-            return []
-        else:
-            # TODO this join seems wrong
-            return [
-                " ".join(fp.split()[1:]) for fp in self.short_status if fp[0] == "A"
-            ]
+        """Returns list of newly added files to the staging area."""
+        return [f[3:] for f in self.short_status if f[0] == "A"]
+
+    @property
+    def oldnames(self) -> List[str]:
+        """Returns previous name of files renamed in staging area."""
+        return [
+            stat[3:].split(" -> ")[0] for stat in self.short_status if stat[0] == "R"
+        ]
 
     @cached_property
     def renames(self) -> List[str]:
@@ -192,12 +199,38 @@ class Dotfiles:
 
     @cached_property
     def list_all(self) -> List[str]:
-        # TODO pseudocode:
-        # (tracked - (deletes + oldnames)) + renames + adds
-        adds = self.adds_staged
-        tracked = self.tracked
-        renames = self.renames
-        return sorted(adds + tracked + renames)
+        include = self.tracked + self.adds_staged + self.renames
+        removed = self.deleted_staged + self.oldnames
+        all = [f for f in include if f not in removed]
+        return sorted(list(set(all)))
+
+    def freshen(self) -> None:
+        """Deltes @cached_property values which forces recompute on next use.
+
+        Very useful for programs building upon Dotfiles. Allows you to take actions,
+        utilize @cached_property values during runtime but request caches be dropped
+        so further runs will request new data from `git`
+        """
+        try:
+            del self.short_status
+        except AttributeError:
+            pass  # ignore failure to delete uncached functions
+        try:
+            del self.tracked
+        except AttributeError:
+            pass
+        try:
+            del self.adds_staged
+        except AttributeError:
+            pass
+        try:
+            del self.renames
+        except AttributeError:
+            pass
+        try:
+            del self.list_all
+        except AttributeError:
+            pass
 
     @property
     def deleted_staged(self) -> List[str]:
