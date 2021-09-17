@@ -165,7 +165,6 @@ def test_oldnames(fake_repo):
 def test_adds_staged(fake_repo):
     dotfiles = fake_repo["df"]
     adds = appears_in(fake_repo, "adds_staged")
-    [print(line) for line in fake_repo["status"].split("\n")]
     assert dotfiles.adds_staged == adds
     for file in adds:
         fake_repo["git"](["restore", "--staged", file])
@@ -201,28 +200,6 @@ def test_modfied_UNstaged(fake_repo):
         fake_repo["git"](["add", "--", file])
     dotfiles.freshen()
     assert dotfiles.modified_unstaged == []
-
-
-# def test_list_all(fake_repo):
-#     worktree, repofiles = fake_repo["worktree"], fake_repo["repofiles"]
-#     dotfiles = fake_repo["df"]
-#     list_files = sorted(
-#         [
-#             str(f["path"].relative_to(worktree))
-#             for f in repofiles
-#             if "list" in f["appears in"]
-#         ]
-#     )
-#     print(f"{list_files= }")
-#     print(dotfiles.short_status)
-#     print(fake_repo["status"])
-#     for f in list_files:
-#         if f not in dotfiles.list_all:
-#             print(f"missing from df: {f}")
-#     for f in dotfiles.list_all:
-#         if f not in list_files:
-#             print(f"shouldn't be in list_files: {f}")
-#     assert list_files == dotfiles.list_all
 
 
 # TODO:
