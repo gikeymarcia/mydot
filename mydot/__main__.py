@@ -55,7 +55,7 @@ group.add_argument(
     help="list all files in the repo",
     action="store_true",
 )
-args = parser.parse_args()
+args, extras = parser.parse_known_args()
 dotfiles = Dotfiles()
 
 if args.edit:
@@ -69,6 +69,8 @@ elif args.list:
         print(dotfile)
 elif args.restore:
     dotfiles.restore()
+elif len(extras) > 1 and extras[0] == "git":
+    dotfiles.git_passthrough(extras)
 else:
     parser.parse_args(["-h"])
 
@@ -82,4 +84,4 @@ else:
 # d. (create) Initiate bare repo and ask which file to append the aliases to?
 #              [.bashrc, .bash_aliases, .bash_profile, .profile, .zshrc]
 
-# vim: foldlevel=4:
+# vim: foldlevel=0:

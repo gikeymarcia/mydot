@@ -2,54 +2,60 @@
 
 ## Quick Start
 
-1. Configure `bash`
+1. **Configure shell:** At the bottom of your `~/.bashrc` add:
 
     ```bash
-    # add to the bottom of your `~/.bashrc`:
     export DOTFILES="$HOME/.config/dotfiles"
-    alias config="/usr/bin/git --git-dir=$DOTFILES --work-tree=$HOME"
     alias d.="python -m mydot"
     ```
 
-    First we define a variable which will point to where our dotfiles are stored then make two aliases. 
+    _what and why?_:
 
-    - `config`: interact with the repo directly
-    - `d.` invoke the module's command line interface
+    - `DOTFILES`: variable pointing to your local `--bare` dotfiles repository
+    - `d.` alias to invoke `mydot`'s command line interface
 
-2. Initialize dotfiles repository
-
-    ```bash
-    mkdir -pv $DOTFILES
-    git init --bare $DOTFILES
-    ```
-
-    Create the directory (and any parents) then initialize the bare repo
-
-3. Confirm and configure dotfiles repo
+2. **Initialize dotfiles repository:** First open a new shell or `source ~/.bashrc`{.bash} then:
 
     ```bash
-    # Confirm working dotfiles alias
-    config status
-    # Disable display of untracked files
-    config config --local status.showUntrackedFiles no
-    # Confirm change
-    config status
-    # Add files to track using Git
-    config add -v ~/.vimrc ~/.tmux.conf ~/.bashrc ~/.bash_aliases
+    mkdir -pv $DOTFILES         # create directory
+    git init --bare $DOTFILES   # initialize the repository
     ```
 
-4. Get powerful with `mydot`
+3. **Install** `mydot`, `fzf`, and disable viewing of untracked files
 
     ```bash
-    python -m pip install --user mydot
-    # try out the commands
-    d. --help
-    d. --edit
-    d. --add
-    d. --restore
-    d. --status
-    d. --ls
+    pip install --user mydot
+    sudo apt install fzf -y
+    d. git config --local status.showUntrackedFiles no
     ```
+
+3. **Add files** to your dotfiles repo
+
+    ```bash
+    d. git add ~/.vimrc ~/.tmux.conf ~/.bashrc ~/.bash_aliases
+    d. git commit -m "the journey of a thousand miles begins with one step"
+    ```
+
+    _protip:_ `d. git` gives you full control and lets you do anything available from the `git` command.
+
+4. **Feel the power** with `mydot`
+
+    ```bash
+    d. --edit   # choose a file to open in $EDITOR
+    d. --add    # add changed files to staging area
+    d. --restore # remove files from staging area
+    d. --status  # see the state of your repo
+    d. --ls     # list all files under version control
+    d. --help   # see other available options
+    ```
+
+## Going Deeper
+
+### Useful aliases
+
+```bash
+alias es="python -m mydot --edit" # quick select a file to edit
+```
 
 ### Source of Truth
 

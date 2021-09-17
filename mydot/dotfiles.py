@@ -278,5 +278,9 @@ class Dotfiles:
             else:
                 sys_exit("Cannot find a suitable editor, and boy did we look!")
 
+    def git_passthrough(self, args: List[str]):
+        """Send commands to git with --git-dir and --work-tree set."""
+        run(self._git_base + args[1:])
+
 
 # vim: foldlevel=1 :
