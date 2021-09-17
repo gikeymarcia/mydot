@@ -39,6 +39,12 @@ group.add_argument(
 )
 group.add_argument(
     "-r",
+    "--run",
+    help="Interactively choose an excutable file/script to run.",
+    action="store_true",
+    dest="run_executable",
+)
+group.add_argument(
     "--restore",
     help="Use fzf to interactively choose file(s) to remove from the staging area.",
     action="store_true",
@@ -67,6 +73,8 @@ elif args.status:
 elif args.list:
     for dotfile in dotfiles.list_all:
         print(dotfile)
+elif args.run_executable:
+    dotfiles.run_executable()
 elif args.restore:
     dotfiles.restore()
 elif len(extras) > 1 and extras[0] == "git":

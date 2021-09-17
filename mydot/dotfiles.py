@@ -5,7 +5,7 @@
 # Standard Library
 # https://docs.python.org/3/library/functools.html?highlight=functools#functools.cached_property
 from functools import cached_property
-from os import chdir, getenv
+from os import chdir, getenv, access, X_OK
 import re
 from pathlib import Path
 from subprocess import run
@@ -19,6 +19,7 @@ from pydymenu import fzf
 # Project Modules
 from mydot.console import console
 from mydot.exceptions import MissingRepositoryLocation, WorktreeMissing
+from mydot.system_funcs import script_plus_args
 
 
 class Dotfiles:
@@ -103,6 +104,21 @@ class Dotfiles:
             self.freshen()
             return edits
 
+    def run_executable(self) -> str:
+        """Interactively choose an executable to run. Optionally add arguements."""
+        exe = fzf(
+            self.executables,
+            prompt="Pick a file to run: ",
+            multi=False,
+            preview=f"{self.preview_app}" + " {}",
+        )
+        if exe is None:
+            sys_exit("No selection made. Cancelling action.")
+        else:
+            command = script_plus_args(Path(self.work_tree) / exe[0])
+            run(command)
+            return str(exe[0])
+
     def add_changes(self) -> List[str]:
         """Interactively choose modified files to add to the staging area."""
         if self.modified_unstaged:
@@ -165,7 +181,7 @@ class Dotfiles:
         reformatted = re.sub(renamed_regex, reformat_renames, output).split("\x00")
         return [statusline for statusline in reformatted if len(statusline) > 0]
 
-    @cached_property
+    @property
     def tracked(self) -> List[str]:
         output_lines = run(
             self._git_base
@@ -175,7 +191,7 @@ class Dotfiles:
         ).stdout.split("\x00")
         return [row.split("\t")[-1] for row in output_lines if len(row) > 0]
 
-    @cached_property
+    @property
     def adds_staged(self) -> List[str]:
         """Returns list of newly added files to the staging area."""
         return [f[3:] for f in self.short_status if f[0] == "A"]
@@ -187,7 +203,7 @@ class Dotfiles:
             stat[3:].split(" -> ")[0] for stat in self.short_status if stat[0] == "R"
         ]
 
-    @cached_property
+    @property
     def renames(self) -> List[str]:
         if len(self.short_status) == 0:
             return []
@@ -201,10 +217,25 @@ class Dotfiles:
 
     @cached_property
     def list_all(self) -> List[str]:
+        """List of all files in repo [+new adds, -things going ]. (relative paths)"""
         include = self.tracked + self.adds_staged + self.renames
         removed = self.deleted_staged + self.oldnames
         all = [f for f in include if f not in removed]
         return sorted(list(set(all)))
+
+    @property
+    def list_all_as_path(self) -> List[Path]:
+        """List of Path() objects for each file in the repository."""
+        return [(Path(self.work_tree) / p) for p in self.list_all]
+
+    @cached_property
+    def executables(self) -> List[str]:
+        """List of executable dotfiles (relative paths)"""
+        return [
+            str(Path(e).relative_to(self.work_tree))
+            for e in self.list_all_as_path
+            if access(e, X_OK)
+        ]
 
     def freshen(self) -> None:
         """Deltes @cached_property values which forces recompute on next use.
@@ -218,19 +249,11 @@ class Dotfiles:
         except AttributeError:
             pass  # ignore failure to delete uncached functions
         try:
-            del self.tracked
-        except AttributeError:
-            pass
-        try:
-            del self.adds_staged
-        except AttributeError:
-            pass
-        try:
-            del self.renames
-        except AttributeError:
-            pass
-        try:
             del self.list_all
+        except AttributeError:
+            pass
+        try:
+            del self.executables
         except AttributeError:
             pass
 
