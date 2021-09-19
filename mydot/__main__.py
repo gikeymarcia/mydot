@@ -45,6 +45,13 @@ group.add_argument(
     dest="run_executable",
 )
 group.add_argument(
+    "-g",
+    "--grep",
+    help="regex search over each non-binary file in the repo. Select from hits.",
+    nargs="+",
+    type=str,
+)
+group.add_argument(
     "--restore",
     help="Use fzf to interactively choose file(s) to remove from the staging area.",
     action="store_true",
@@ -71,8 +78,9 @@ elif args.add:
 elif args.status:
     dotfiles.show_status()
 elif args.list:
-    for dotfile in dotfiles.list_all:
-        print(dotfile)
+    [print(file) for file in dotfiles.list_all]
+elif args.grep:
+    dotfiles.grep(args.grep)
 elif args.run_executable:
     dotfiles.run_executable()
 elif args.restore:
@@ -83,13 +91,14 @@ else:
     parser.parse_args(["-h"])
 
 # TODO: Usability at the CLI
-# Move from --flags to subcommands
 # https://docs.python.org/3/library/argparse.html#sub-commands
-# d. (stat) default
-# d. (add) fzf modified or add -v for List[files]
-# d. (branch) switch to or checkout branches
-# d. (tar) make tarball (optionally take path for file)
-# d. (create) Initiate bare repo and ask which file to append the aliases to?
+# d. --branch switch to or checkout branches
+# d. --tar make tarball (optionally take path for file)
+# d. --init Initiate bare repo and ask which file to append the aliases to?
 #              [.bashrc, .bash_aliases, .bash_profile, .profile, .zshrc]
+# d. --import REPO : git clone repo and pull it into your work-tree.
+#       If a file would conflict backup for the user in a specified location.
+#       future idea: offer fzf selectors to decide what to backup and the rest
+#       will be discarded
 
 # vim: foldlevel=0:

@@ -86,6 +86,7 @@ class Dotfiles:
         console.print("\nModified Files:", style="header")
         run(self._git_base + ["status", "-s"])
 
+    # ACTIONS
     def edit_files(self) -> List[str]:
         """Interactively choose dotfiles to open in text editor."""
         edits = fzf(
@@ -103,6 +104,33 @@ class Dotfiles:
                 run([self.editor, "-o"] + edits)
             self.freshen()
             return edits
+
+    def grep(self, patterns: List[str]) -> List[str]:
+        """Interactively choose dotfiles to open in text editor."""
+        # TODO make it work for multiple regex searches
+        # TODO make the preview show grep at the top
+        regex = patterns[0]
+        proc = run(
+            "grep -I -l".split() + [regex] + self.list_all,
+            capture_output=True,
+            text=True,
+        )
+        hits = [h for h in proc.stdout.split("\n") if len(h) > 0]
+        choices = fzf(
+            hits,
+            prompt="Choose files to open: ",
+            multi=True,
+            preview=f"{self.preview_app}" + " {}",
+        )
+        if choices is not None:
+            if len(choices) == 1:
+                run([self.editor, choices[0]])
+            else:
+                run([self.editor, "-o"] + choices)
+            self.freshen()
+            return choices
+        else:
+            sys_exit("No selections made. Cancelling action.")
 
     def run_executable(self) -> str:
         """Interactively choose an executable to run. Optionally add arguements."""
@@ -159,8 +187,10 @@ class Dotfiles:
             self.show_status()
             sys_exit("\nNo staged changes to restore.")
 
+    # PROPERTIES
     @cached_property
     def short_status(self) -> List[str]:
+        """List of lines in git status porecelain=v1 format (except renames)."""
         output = run(
             self._git_base
             + ["status", "--short", "--untracked-files=no", "--porcelain", "-z"],
