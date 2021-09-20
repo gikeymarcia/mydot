@@ -48,7 +48,6 @@ group.add_argument(
     "-g",
     "--grep",
     help="regex search over each non-binary file in the repo. Select from hits.",
-    nargs="+",
     type=str,
 )
 group.add_argument(

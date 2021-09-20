@@ -44,6 +44,7 @@
     d. --edit   # choose a file to open in $EDITOR
     d. --add    # add changed files to staging area
     d. --run    # select an executable file to run
+    d. --grep   # grep through tracked dotfiles and pick from files with matches
     d. --restore # remove files from staging area
     d. --status  # see the state of your repo
     d. --ls     # list all files under version control

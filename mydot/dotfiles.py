@@ -105,28 +105,29 @@ class Dotfiles:
             self.freshen()
             return edits
 
-    def grep(self, patterns: List[str]) -> List[str]:
+    def grep(self, regex: str) -> List[str]:
         """Interactively choose dotfiles to open in text editor."""
-        # TODO make it work for multiple regex searches
-        # TODO make the preview show grep at the top
-        regex = patterns[0]
+        # LATER make it work for multiple regex searches
         proc = run(
-            "grep -I -l".split() + [regex] + self.list_all,
+            ["grep", "-I", "-l", regex] + self.list_all,
             capture_output=True,
             text=True,
         )
         hits = [h for h in proc.stdout.split("\n") if len(h) > 0]
+        if len(hits) == 0:
+            sys_exit("No matches for your regex search found in tracked dotfiles.")
         choices = fzf(
             hits,
             prompt="Choose files to open: ",
             multi=True,
-            preview=f"{self.preview_app}" + " {}",
+            preview=f"grep {regex} -n --context=3 --color=always" + " {}",
         )
+        # TODO: abstract these functions into an Opener(ABC/Protocol)
         if choices is not None:
             if len(choices) == 1:
-                run([self.editor, choices[0]])
+                run([self.editor, "-c", f"/{regex}", choices[0]])
             else:
-                run([self.editor, "-o"] + choices)
+                run([self.editor, "-o", "-c", f"/{regex}"] + choices)
             self.freshen()
             return choices
         else:
