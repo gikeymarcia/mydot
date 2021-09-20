@@ -8,7 +8,7 @@ README = (Path(__file__).parent / "README.md").read_text()
 # https://setuptools.readthedocs.io/en/latest/setuptools.html#basic-use
 setup(
     name="mydot",
-    version="0.3.1",
+    version="0.3.2",
     description="Manage and edit $HOME dotfiles using Python + git = <3",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -17,5 +17,5 @@ setup(
     author_email="gikeymarcia@gmail.com",
     license="GPL-3.0",
     packages=find_packages(exclude="tests"),
-    install_requires=["pydymenu>=0.3.1", "rich"],
+    install_requires=["pydymenu>=0.3.2", "rich"],
 )
