@@ -94,6 +94,7 @@ else:
 # d. --discard throw away work tree changes and restore a file to state @ HEAD
 # d. --branch switch to or checkout branches
 # d. --tar make tarball (optionally take path for file)
+# d. --clipboard copy choosen file locations to clipboard
 # d. --init Initiate bare repo and ask which file to append the aliases to?
 #              [.bashrc, .bash_aliases, .bash_profile, .profile, .zshrc]
 # d. --import REPO : git clone repo and pull it into your work-tree.
