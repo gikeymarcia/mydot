@@ -91,6 +91,7 @@ else:
 
 # TODO: Usability at the CLI
 # https://docs.python.org/3/library/argparse.html#sub-commands
+# d. --discard throw away work tree changes and restore a file to state @ HEAD
 # d. --branch switch to or checkout branches
 # d. --tar make tarball (optionally take path for file)
 # d. --init Initiate bare repo and ask which file to append the aliases to?
