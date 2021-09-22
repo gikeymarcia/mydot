@@ -12,7 +12,7 @@ rich_str = {
     "prog": rich_text("[code]python -m mydot[/]", theme=my_theme),
     "desc": rich_text(
         "[cool]Manage[/] and [edit]edit[/] [code]$HOME[/] dotfiles "
-        "using [strong]Python + git[/] = [bold red]<3[/]",
+        "using [strong]Python + git + fzf[/] = [bold red]<3[/]",
         theme=my_theme,
     ),
     "epilog": rich_text(

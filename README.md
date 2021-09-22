@@ -1,7 +1,7 @@
 # mydot -- A Python Module for managing dotfiles
 
 Super-charged version of the [Atlassian][atlassian] approach to managing 
-dotfiles using a bare git repo.
+dotfiles using a bare git repo + ['fzf'][fzf] magic!
 
 ## Quick Start
 
@@ -79,3 +79,5 @@ This project is available on [GitHub][github] and [GitLab][gitlab]. Each push to
 "mydot project homepage on PyPi.org"
 [atlassian]: <https://www.atlassian.com/git/tutorials/dotfiles>
 "The best way to store your dotfiles: A bare Git repository"
+[fzf]: <https://github.com/junegunn/fzf>
+"A command-line fuzzy finder"
