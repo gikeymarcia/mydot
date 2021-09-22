@@ -1,7 +1,7 @@
 # mydot -- A Python Module for managing dotfiles
 
 Super-charged version of the [Atlassian][atlassian] approach to managing 
-dotfiles using a bare git repo + ['fzf'][fzf] magic!
+dotfiles using a bare git repo + [`fzf`][fzf] magic!
 
 ## Quick Start
 
