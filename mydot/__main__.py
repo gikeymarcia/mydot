@@ -59,6 +59,11 @@ group.add_argument(
     action="store_true",
 )
 group.add_argument(
+    "--tar",
+    help="Make a tarball of tracked dotfiles @ work-tree/dotfiles.tar.gz",
+    action="store_true",
+)
+group.add_argument(
     "-s",
     "--status",
     help="Show status of dotfiles repo",
@@ -87,17 +92,21 @@ elif args.run_executable:
     dotfiles.run_executable()
 elif args.restore:
     dotfiles.restore()
+elif args.tar:
+    dotfiles.make_tar()
 elif len(extras) > 1 and extras[0] == "git":
     dotfiles.git_passthrough(extras)
 else:
     parser.parse_args(["-h"])
 
 # TODO: Usability at the CLI
-# https://docs.python.org/3/library/argparse.html#sub-commands
 # d. --discard throw away work tree changes and restore a file to state @ HEAD
-# d. --branch switch to or checkout branches
-# d. --tar make tarball (optionally take path for file)
+# d. --private build up a filter of files marked 'private'
+#   - hide from previews
+#   - default hide from --tar
+#   - consider relation to other features
 # d. --clipboard copy choosen file locations to clipboard
+# d. --branch switch to or checkout branches
 # d. --init Initiate bare repo and ask which file to append the aliases to?
 #              [.bashrc, .bash_aliases, .bash_profile, .profile, .zshrc]
 # d. --import REPO : git clone repo and pull it into your work-tree.

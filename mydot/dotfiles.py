@@ -186,6 +186,19 @@ class Dotfiles:
             self.show_status()
             sys_exit("\nNo staged changes to restore.")
 
+    def make_tar(self) -> Path:
+        """Make tarball of dotfiles @ self.work_tree / 'dotfiles.tar.gz'."""
+        # TODO: incorporate a 'privatemask' feature
+        tarball = self.work_tree / "dotfiles.tar.gz"
+        tar_cmd = ["tar", "cvzf", tarball] + self.list_all
+        run(tar_cmd)
+        print("-" * 20)
+        print(
+            "tarball ready. Place in work-tree and expand with:\n"
+            "tar xvf dotfiles.tar.gz"
+        )
+        return tarball
+
     # PROPERTIES
     @cached_property
     def short_status(self) -> List[str]:
