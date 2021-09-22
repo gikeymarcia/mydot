@@ -68,8 +68,9 @@ alias rs="python -m mydot --run" # quick select a script to run
 
 ### Source of Truth
 
-This project is available on [GitHub][github] and [GitLab][gitlab]. Each push to 
-`master` automatically goes to both so choose whichever platform you prefer. All releases are published to [pypi]
+This project is available on [GitHub][github] and [GitLab][gitlab]. Each push 
+to `master` automatically goes to both so choose whichever platform you prefer. 
+All releases are published to [PyPi][pypi]
 
 [github]: <https://github.com/gikeymarcia/mydot>
 "Follow and Contribute on GitHub"
