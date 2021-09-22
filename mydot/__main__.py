@@ -1,4 +1,7 @@
+#!/usr/bin/env python3
 # Mikey Garcia, @gikeymarcia
+# https://github.com/gikeymarcia/mydot
+
 import argparse
 
 from mydot import Dotfiles

@@ -17,5 +17,5 @@ setup(
     author_email="gikeymarcia@gmail.com",
     license="GPL-3.0",
     packages=find_packages(exclude="tests"),
-    install_requires=["pydymenu>=0.3.1", "rich"],
+    install_requires=["pydymenu>=0.4.0", "rich"],
 )

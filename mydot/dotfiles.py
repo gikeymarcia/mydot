@@ -5,18 +5,16 @@
 # Standard Library
 # https://docs.python.org/3/library/functools.html?highlight=functools#functools.cached_property
 from functools import cached_property
-from os import chdir, getenv, access, X_OK
-import re
+from os import X_OK, access, chdir, getenv
 from pathlib import Path
+import re
+from shutil import which
 from subprocess import run
 from sys import exit as sys_exit
-from typing import Union, List
-from shutil import which
+from typing import List, Union
 
-# PyPi
 from pydymenu import fzf
 
-# Project Modules
 from mydot.console import console
 from mydot.exceptions import MissingRepositoryLocation, WorktreeMissing
 from mydot.system_funcs import script_plus_args
