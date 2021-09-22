@@ -1,5 +1,8 @@
 # mydot -- A Python Module for managing dotfiles
 
+Super-charged version of the [Atlassian][atlassian] approach to managing 
+dotfiles using a bare git repo.
+
 ## Quick Start
 
 1. **Configure shell:** At the bottom of your `~/.bashrc` add:
@@ -71,3 +74,5 @@ This project is available on [GitHub][github] and [GitLab][gitlab]. Each push to
 "Follow and Contribute on GitLab"
 [pypi]: <https://pypi.org/project/mydot/>
 "mydot project homepage on PyPi.org"
+[atlassian]: <https://www.atlassian.com/git/tutorials/dotfiles>
+"The best way to store your dotfiles: A bare Git repository"
