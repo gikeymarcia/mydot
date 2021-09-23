@@ -345,6 +345,7 @@ class Dotfiles:
 
     def git_passthrough(self, args: List[str]):
         """Send commands to git with --git-dir and --work-tree set."""
+        chdir(self.run_from)
         run(self._git_base + args[1:])
 
 
