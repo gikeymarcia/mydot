@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+# Mikey Garcia, @gikeymarcia
+# https://github.com/gikeymarcia/mydot
+
 # standard library
 from pathlib import Path
 import subprocess as sp
@@ -69,6 +73,18 @@ def fake_repo(tmp_path):
             "stages": ["first", "delete"],
             "appears in": ["add", "list", "restore", "modified_unstaged", "tracked"],
         },
+        # renames
+        {
+            "path": worktree / "oldname-edits",
+            "stages": ["first", "edit"],
+            "appears in": ["staged", "oldname", "tracked"],
+        },
+        {
+            "path": worktree / "rename-edits",
+            "stages": ["rename"],
+            "appears in": ["list", "staged", "modified_unstaged"],
+            "from": worktree / "oldname-edits",
+        },
         {
             "path": worktree / "oldname",
             "stages": ["first"],
@@ -88,7 +104,7 @@ def fake_repo(tmp_path):
         {
             "path": worktree / "add me-fool",
             "stages": ["create", "add"],
-            "appears in": ["adds_staged"],
+            "appears in": ["adds_staged", "list"],
         },
     ]
 
@@ -121,6 +137,10 @@ def fake_repo(tmp_path):
         if "add" in stages:
             git_action(["add", fp])
 
+    def run_status():
+        for line in git_action(["status", "-s", "--porcelain"]).stdout.split("\n"):
+            print(line)
+
     return {
         "bare": bare,
         "worktree": worktree,
@@ -128,7 +148,7 @@ def fake_repo(tmp_path):
         "git": git_action,
         "repofiles": repofiles,
         "df": mydot.Dotfiles(bare, worktree),
-        "status": git_action(["status"]).stdout,
+        "status": run_status,
         "tree": sp.run(["tree", "-C", "-p", worktree], capture_output=True),
     }
 
@@ -149,15 +169,12 @@ def test_tracked(fake_repo):
     assert dotfiles.tracked == tracked
 
 
-# def test_list_all(fake_repo):
-#     dotfiles = fake_repo["df"]
-#     list_all = appears_in(fake_repo, "list")
-#     [print(line) for line in fake_repo["status"].split("\n")]
-#     assert dotfiles.list_all == list_all
-
-
 def test_oldnames(fake_repo):
     dotfiles = fake_repo["df"]
+    # for file in appears_in(fake_repo, "modified_unstaged"):
+    #     fake_repo["git"](["restore", "--", file])
+    dotfiles.freshen()
+    fake_repo["status"]()
     old = appears_in(fake_repo, "oldname")
     assert dotfiles.oldnames == old
 
@@ -194,21 +211,26 @@ def test_modfied_staged(fake_repo):
 
 def test_modfied_UNstaged(fake_repo):
     dotfiles = fake_repo["df"]
+    fake_repo["status"]()
     modified_unstaged = appears_in(fake_repo, "modified_unstaged")
-    assert dotfiles.modified_unstaged == modified_unstaged
+    assert dotfiles.modified_unstaged == sorted(modified_unstaged)
     for file in modified_unstaged:
         fake_repo["git"](["add", "--", file])
     dotfiles.freshen()
     assert dotfiles.modified_unstaged == []
 
 
+def test_list_all(fake_repo):
+    dotfiles = fake_repo["df"]
+    fake_repo["status"]()
+    list_all = appears_in(fake_repo, "list")
+    assert dotfiles.list_all == list_all
+
+
 # TODO:
-# - files renamed
 # - Modified / Added / Rename
 # subcommand ADD:
 #   test: "adding" deleted files
-#   test: only listing files with unstaged changes (git ls-files?)
 #   test: make sure things don't break with a clean worktree
-# example: -ls didn't work until I modified staged_adds()
 
 # vim: foldlevel=1:

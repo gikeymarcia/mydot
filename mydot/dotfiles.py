@@ -210,18 +210,22 @@ class Dotfiles:
             capture_output=True,
         ).stdout
 
-        def reformat_renames(m):
-            """Reformat renamed entry output from 'git status -z'.
-
-            New format: '\x00R[ MD] oldname -> rename\x00'
-            Important: this is different than the format stated in 'man git-status'
-            """
-            return "\x00" + m.group(1) + m.group(3) + " -> " + m.group(2) + "\x00"
-
-        renamed_regex = r"\x00(R[ MD] )(.*)\x00(.*)\x00"
-        # https://docs.python.org/3/library/re.html#text-munging
-        reformatted = re.sub(renamed_regex, reformat_renames, output).split("\x00")
-        return [statusline for statusline in reformatted if len(statusline) > 0]
+        pieces = [p for p in output.split("\x00") if p]
+        length = len(pieces)
+        pos = 0
+        result = []
+        while pos < length:
+            if pieces[pos][0] == "R":
+                stem = pieces[pos][:3]
+                old = pieces[pos + 1]
+                new = pieces[pos][3:]
+                sep = " -> "
+                result.append(f"{stem}{old}{sep}{new}")
+                pos += 2
+            else:
+                result.append(pieces[pos])
+                pos += 1
+        return result
 
     @property
     def tracked(self) -> List[str]:
@@ -312,7 +316,9 @@ class Dotfiles:
     @property
     def modified_unstaged(self) -> List[str]:
         """Returns all files with unstaged modifications or Deletions."""
-        return [stat[3:] for stat in self.short_status if stat[1] in ["M", "D"]]
+        mods = [line[3:] for line in self.short_status if line[:2] in [" M", " D"]]
+        renamed_mods = [s.split(" -> ")[1] for s in self.short_status if s[:2] == "RM"]
+        return sorted(renamed_mods + mods)
 
     @cached_property
     def _git_str(self) -> str:
