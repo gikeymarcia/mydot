@@ -166,12 +166,9 @@ class Dotfiles:
 
     def restore(self) -> List[str]:
         """Interactively choose files to remove from the staging area."""
-        restorables = sorted(
-            list(set(self.modified_staged + self.deleted_staged + self.adds_staged))
-        )
-        if restorables:
+        if self.restorables:
             restores = fzf(
-                restorables,
+                self.restorables,
                 prompt="Choose changes to remove from staging area: ",
                 multi=True,
                 preview=f"{self._git_str} diff --color --minimal HEAD -- " + "{}",
@@ -302,6 +299,10 @@ class Dotfiles:
             del self.executables
         except AttributeError:
             pass
+        try:
+            del self.restorables
+        except AttributeError:
+            pass
 
     @property
     def deleted_staged(self) -> List[str]:
@@ -319,6 +320,11 @@ class Dotfiles:
         mods = [line[3:] for line in self.short_status if line[:2] in [" M", " D"]]
         renamed_mods = [s.split(" -> ")[1] for s in self.short_status if s[:2] == "RM"]
         return sorted(renamed_mods + mods)
+
+    @cached_property
+    def restorables(self) -> List[str]:
+        """Returns all files which could be affected by `git restore --staged`."""
+        return sorted(self.modified_staged + self.deleted_staged + self.adds_staged)
 
     @cached_property
     def _git_str(self) -> str:

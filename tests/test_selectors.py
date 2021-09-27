@@ -45,13 +45,13 @@ def fake_repo(tmp_path):
         },
         {
             "path": worktree / "modified staged changes",
-            "stages": ["first"],
-            "appears in": ["staged", "list", "restore", "tracked"],
+            "stages": ["first", "edit", "stage"],
+            "appears in": ["staged", "list", "restore", "tracked", "modified_staged"],
         },
         {
             "path": worktree / "modified unstaged changes",
             "stages": ["first", "edit"],
-            "appears in": ["add", "list", "restore", "modified_unstaged", "tracked"],
+            "appears in": ["add", "list", "discard", "modified_unstaged", "tracked"],
         },
         {
             "path": worktree / "deleted staged",
@@ -66,12 +66,12 @@ def fake_repo(tmp_path):
         {
             "path": worktree / "in folder/modified unstaged",
             "stages": ["first", "edit"],
-            "appears in": ["add", "list", "restore", "modified_unstaged", "tracked"],
+            "appears in": ["add", "list", "discard", "modified_unstaged", "tracked"],
         },
         {
             "path": worktree / "deleted unstaged",
             "stages": ["first", "delete"],
-            "appears in": ["add", "list", "restore", "modified_unstaged", "tracked"],
+            "appears in": ["add", "list", "discard", "modified_unstaged", "tracked"],
         },
         # renames
         {
@@ -104,7 +104,7 @@ def fake_repo(tmp_path):
         {
             "path": worktree / "add me-fool",
             "stages": ["create", "add"],
-            "appears in": ["adds_staged", "list"],
+            "appears in": ["adds_staged", "list", "restore"],
         },
     ]
 
@@ -225,6 +225,13 @@ def test_list_all(fake_repo):
     fake_repo["status"]()
     list_all = appears_in(fake_repo, "list")
     assert dotfiles.list_all == list_all
+
+
+def test_restorables(fake_repo):
+    dotfiles = fake_repo["df"]
+    fake_repo["status"]()
+    restorable = appears_in(fake_repo, "restore")
+    assert dotfiles.restorables == restorable
 
 
 # TODO:
