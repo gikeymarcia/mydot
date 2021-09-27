@@ -7,7 +7,6 @@
 from functools import cached_property
 from os import X_OK, access, chdir, getenv
 from pathlib import Path
-import re
 from shutil import which
 from subprocess import run
 from sys import exit as sys_exit
