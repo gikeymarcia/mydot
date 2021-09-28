@@ -59,6 +59,11 @@ group.add_argument(
     action="store_true",
 )
 group.add_argument(
+    "--discard",
+    help="Revert unstaged file(s) back to their state at the last commit.",
+    action="store_true",
+)
+group.add_argument(
     "--tar",
     help="Make a tarball of tracked dotfiles @ work-tree/dotfiles.tar.gz",
     action="store_true",
@@ -90,6 +95,8 @@ elif args.grep:
     dotfiles.grep(args.grep)
 elif args.run_executable:
     dotfiles.run_executable()
+elif args.discard:
+    dotfiles.discard_changes()
 elif args.restore:
     dotfiles.restore()
 elif args.tar:
@@ -100,7 +107,6 @@ else:
     parser.parse_args(["-h"])
 
 # TODO: Usability at the CLI
-# d. --discard throw away work tree changes and restore a file to state @ HEAD
 # d. --private build up a filter of files marked 'private'
 #   - hide from previews
 #   - default hide from --tar

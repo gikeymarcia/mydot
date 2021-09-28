@@ -232,6 +232,7 @@ def test_modfied_staged(fake_repo):
 
 
 def test_modfied_UNstaged(fake_repo):
+    # TODO: consider files with a combo of staged and unstaged changes
     dotfiles = fake_repo["df"]
     fake_repo["status"]()
     modified_unstaged = appears_in(fake_repo, "modified_unstaged")

@@ -49,6 +49,7 @@ dotfiles using a bare git repo + [`fzf`][fzf] magic!
     d. --run    # select an executable file to run
     d. --grep   # grep through tracked dotfiles and pick from matches
     d. --restore # remove files from staging area
+    d. --discard # discard unstaged changes from work tree
 
     d. --tar    # make a tarball of your dotfiles
     d. --status # see the state of your repo

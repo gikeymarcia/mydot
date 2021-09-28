@@ -35,7 +35,7 @@ class Dotfiles:
         """
         self.bare_repo: Path = self._resolve_repo_location(local_bare_repo)
         self.work_tree: Path = self._resolve_work_tree_location(work_tree)
-        self._git_base = [
+        self._git_base: List[str] = [
             "git",
             f"--git-dir={self.bare_repo}",
             f"--work-tree={self.work_tree}",
@@ -182,6 +182,26 @@ class Dotfiles:
             self.show_status()
             sys_exit("\nNo staged changes to restore.")
 
+    def discard_changes(self) -> List[str]:
+        """Discard changes from file(s) in the working directory."""
+        unstaged = self.modified_unstaged
+        if unstaged:
+            discards = fzf(
+                unstaged,
+                prompt="Choose changes to discard: ",
+                multi=True,
+                preview=f"{self._git_str} diff --color --minimal HEAD -- " + "{}",
+            )
+            if discards is None:
+                sys_exit("No selection made. No changes will be discarded.")
+            else:
+                run(self._git_base + ["restore", "--"] + discards)
+                self.freshen()
+                return discards
+        else:
+            self.show_status()
+            sys_exit("\nNo unstaged changes to discard.")
+
     def make_tar(self) -> Path:
         """Make tarball of dotfiles @ self.work_tree / 'dotfiles.tar.gz'."""
         # TODO: incorporate a 'privatemask' feature
@@ -308,6 +328,7 @@ class Dotfiles:
     @property
     def modified_unstaged(self) -> List[str]:
         """Returns all files with unstaged modifications or Deletions."""
+        # TODO: what about "MM " files? Modified staged changes + unstages mods
         mods = [line[3:] for line in self.short_status if line[:2] in [" M", " D"]]
         renamed_mods = [s.split(" -> ")[1] for s in self.short_status if s[:2] == "RM"]
         return sorted(renamed_mods + mods)
