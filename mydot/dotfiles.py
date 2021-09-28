@@ -247,15 +247,7 @@ class Dotfiles:
 
     @property
     def renames(self) -> List[str]:
-        if len(self.short_status) == 0:
-            return []
-        else:
-            rename_lines = [l for l in self.short_status if l[0] == "R"]
-            if len(rename_lines) > 0:
-                rename_files = [f.split(" -> ")[1] for f in rename_lines]
-                return rename_files
-            else:
-                return []
+        return [line.split(" -> ")[1] for line in self.short_status if line[0] == "R"]
 
     @cached_property
     def list_all(self) -> List[str]:

@@ -5,7 +5,7 @@
 # standard library
 from pathlib import Path
 import subprocess as sp
-from typing import List
+from typing import List, Union
 
 import pytest
 
@@ -46,7 +46,7 @@ def fake_repo(tmp_path):
         {
             "path": worktree / "modified staged changes",
             "stages": ["first", "edit", "stage"],
-            "appears in": ["staged", "list", "restore", "tracked", "modified_staged"],
+            "appears in": ["list", "restore", "tracked", "modified_staged"],
         },
         {
             "path": worktree / "modified unstaged changes",
@@ -56,12 +56,12 @@ def fake_repo(tmp_path):
         {
             "path": worktree / "deleted staged",
             "stages": ["first", "delete", "stage"],
-            "appears in": ["deleted", "staged", "restore", "tracked"],
+            "appears in": ["deleted", "restore", "tracked"],
         },
         {
             "path": worktree / "in folder/modified staged",
             "stages": ["first", "edit", "stage"],
-            "appears in": ["staged", "list", "restore", "modified_staged", "tracked"],
+            "appears in": ["list", "restore", "modified_staged", "tracked"],
         },
         {
             "path": worktree / "in folder/modified unstaged",
@@ -77,25 +77,26 @@ def fake_repo(tmp_path):
         {
             "path": worktree / "oldname-edits",
             "stages": ["first", "edit"],
-            "appears in": ["staged", "oldname", "tracked"],
+            "appears in": ["oldname", "tracked"],
         },
         {
             "path": worktree / "rename-edits",
             "stages": ["rename"],
-            "appears in": ["list", "staged", "modified_unstaged"],
+            "appears in": ["list", "modified_unstaged", "rename"],
             "from": worktree / "oldname-edits",
         },
         {
             "path": worktree / "oldname",
             "stages": ["first"],
-            "appears in": ["staged", "oldname", "tracked"],
+            "appears in": ["oldname", "tracked"],
         },
         {
             "path": worktree / "rename",
             "stages": ["rename"],
-            "appears in": ["list", "staged"],
+            "appears in": ["list", "rename"],
             "from": worktree / "oldname",
         },
+        # new files
         {
             "path": worktree / "newfile",
             "stages": ["create"],
@@ -153,14 +154,22 @@ def fake_repo(tmp_path):
     }
 
 
-def appears_in(fake: dict, key: str) -> List[str]:
-    """Filters a fake_repo return list where the 'key' in 'appears_in'."""
-    filtered = [
-        str(file["path"].relative_to(fake["worktree"]))
-        for file in fake["repofiles"]
-        if key in file["appears in"]
-    ]
-    return sorted(filtered)
+def appears_in(fake: dict, keys: Union[List[str], str]) -> List[str]:
+    """Filters a fake repo return object by given keys.
+
+    You can pass in a single key as a str or List[str] of keys.
+    Only files matching all given keys are returned.
+    Matches are those files with the keys in their 'appears in' list
+    """
+    filters = [keys] if isinstance(keys, str) else keys
+    matches = []
+    for file in fake["repofiles"]:
+        for key in filters:
+            if key not in file["appears in"]:
+                break
+        else:
+            matches.append(str(file["path"].relative_to(fake["worktree"])))
+    return sorted(matches)
 
 
 def test_tracked(fake_repo):
@@ -169,14 +178,27 @@ def test_tracked(fake_repo):
     assert dotfiles.tracked == tracked
 
 
+def test_list_all(fake_repo):
+    dotfiles = fake_repo["df"]
+    fake_repo["status"]()
+    list_all = appears_in(fake_repo, "list")
+    assert dotfiles.list_all == list_all
+
+
 def test_oldnames(fake_repo):
     dotfiles = fake_repo["df"]
-    # for file in appears_in(fake_repo, "modified_unstaged"):
-    #     fake_repo["git"](["restore", "--", file])
     dotfiles.freshen()
     fake_repo["status"]()
     old = appears_in(fake_repo, "oldname")
     assert dotfiles.oldnames == old
+
+
+def test_renames(fake_repo):
+    dotfiles = fake_repo["df"]
+    dotfiles.freshen()
+    fake_repo["status"]()
+    renames = appears_in(fake_repo, "rename")
+    assert dotfiles.renames == renames
 
 
 def test_adds_staged(fake_repo):
@@ -218,13 +240,6 @@ def test_modfied_UNstaged(fake_repo):
         fake_repo["git"](["add", "--", file])
     dotfiles.freshen()
     assert dotfiles.modified_unstaged == []
-
-
-def test_list_all(fake_repo):
-    dotfiles = fake_repo["df"]
-    fake_repo["status"]()
-    list_all = appears_in(fake_repo, "list")
-    assert dotfiles.list_all == list_all
 
 
 def test_restorables(fake_repo):
