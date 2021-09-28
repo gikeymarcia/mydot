@@ -5,12 +5,6 @@
 #### Commands
 
 ```bash
-# act as transparent pass-through for git commands
-# Honor git aliases! `shell=True`? How to get env to activate aliases...
-d status
-d add
-d log
-
 # fzf files from current working directory
 d add - 
 
