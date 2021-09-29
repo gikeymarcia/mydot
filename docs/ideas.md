@@ -1,5 +1,9 @@
 # Project Ideas
 
+- [ ] `--private` build up a filter of files marked 'private'
+  - hide from previews
+  - default hide from --tar
+  - consider relation to other features
 
 - [ ] `--init` Boostrap a machine without a current dotfiles repo
     - install dependencies (fzf, git)
@@ -8,7 +12,7 @@
         - [ ] RHEL
         - what else?
     - Add `d.` alias and `$DOTFILES` variable to `~/.bashrc`
-        - make it work with `zsh` too. Figure out how.
+        - make it work with `zsh` too. Figure out how. `.zshrc`? 
     - initialize the repo (README step 2)
     - `git config --local status.showUntrackedFiles no`
 
@@ -30,3 +34,5 @@
   quick selector
     - Potential idea: allow the same for the `--run` command but without the 
       added logic of being able to pass parameters to the command.
+
+- [ ] `--branch` switch to or checkout branches

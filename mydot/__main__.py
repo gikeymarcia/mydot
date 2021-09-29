@@ -106,18 +106,4 @@ elif len(extras) > 1 and extras[0] == "git":
 else:
     parser.parse_args(["-h"])
 
-# TODO: Usability at the CLI
-# d. --private build up a filter of files marked 'private'
-#   - hide from previews
-#   - default hide from --tar
-#   - consider relation to other features
-# d. --clipboard copy choosen file locations to clipboard
-# d. --branch switch to or checkout branches
-# d. --init Initiate bare repo and ask which file to append the aliases to?
-#              [.bashrc, .bash_aliases, .bash_profile, .profile, .zshrc]
-# d. --import REPO : git clone repo and pull it into your work-tree.
-#       If a file would conflict backup for the user in a specified location.
-#       future idea: offer fzf selectors to decide what to backup and the rest
-#       will be discarded
-
 # vim: foldlevel=0:
