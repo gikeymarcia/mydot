@@ -31,7 +31,7 @@ def fake_repo(tmp_path):
     sp.run(init, capture_output=True)
     git_action = GitContoller(bare, worktree)
 
-    # populate worktree stages: first > edit > delete > stage > create
+    # populate worktree stages: first > edit > delete > stage > create > edit2
     repofiles = [
         {
             "path": worktree / "unmodified",
@@ -47,6 +47,19 @@ def fake_repo(tmp_path):
             "path": worktree / "modified staged changes",
             "stages": ["first", "edit", "stage"],
             "appears in": ["list", "restore", "tracked", "modified_staged"],
+        },
+        {
+            "path": worktree / "modified partial staged",
+            "stages": ["first", "edit", "stage", "edit2"],
+            "appears in": [
+                "add",
+                "list",
+                "discard",
+                "modified_unstaged",
+                "modified_staged",
+                "tracked",
+                "restore",
+            ],
         },
         {
             "path": worktree / "modified unstaged changes",
@@ -137,6 +150,8 @@ def fake_repo(tmp_path):
             fp.write_text(f"new file {fp}")
         if "add" in stages:
             git_action(["add", fp])
+        if "edit2" in stages:
+            fp.write_text(f"re-edited content for {fp}")
 
     def run_status():
         for line in git_action(["status", "-s", "--porcelain"]).stdout.split("\n"):
@@ -232,7 +247,6 @@ def test_modfied_staged(fake_repo):
 
 
 def test_modfied_UNstaged(fake_repo):
-    # TODO: consider files with a combo of staged and unstaged changes
     dotfiles = fake_repo["df"]
     fake_repo["status"]()
     modified_unstaged = appears_in(fake_repo, "modified_unstaged")

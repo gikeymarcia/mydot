@@ -329,7 +329,9 @@ class Dotfiles:
     def modified_unstaged(self) -> List[str]:
         """Returns all files with unstaged modifications or Deletions."""
         # TODO: what about "MM " files? Modified staged changes + unstages mods
-        mods = [line[3:] for line in self.short_status if line[:2] in [" M", " D"]]
+        mods = [
+            line[3:] for line in self.short_status if line[:2] in [" M", " D", "MM"]
+        ]
         renamed_mods = [s.split(" -> ")[1] for s in self.short_status if s[:2] == "RM"]
         return sorted(renamed_mods + mods)
 
