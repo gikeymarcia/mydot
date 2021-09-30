@@ -170,7 +170,7 @@ class Dotfiles:
                 self.restorables,
                 prompt="Choose changes to remove from staging area: ",
                 multi=True,
-                preview=f"{self._git_str} diff --color --minimal HEAD -- " + "{}",
+                preview=f"{self._git_str} diff --color --minimal --staged -- " + "{}",
             )
             if restores is None:
                 sys_exit("No selection made. No files will be unstaged.")
