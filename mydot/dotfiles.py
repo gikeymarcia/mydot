@@ -328,7 +328,6 @@ class Dotfiles:
     @property
     def modified_unstaged(self) -> List[str]:
         """Returns all files with unstaged modifications or Deletions."""
-        # TODO: what about "MM " files? Modified staged changes + unstages mods
         mods = [
             line[3:] for line in self.short_status if line[:2] in [" M", " D", "MM"]
         ]
