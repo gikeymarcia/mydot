@@ -64,6 +64,11 @@ group.add_argument(
     action="store_true",
 )
 group.add_argument(
+    "--clip",
+    help="Put absolute file path(s) into the clipboard.",
+    action="store_true",
+)
+group.add_argument(
     "--tar",
     help="Make a tarball of tracked dotfiles @ work-tree/dotfiles.tar.gz",
     action="store_true",
@@ -101,6 +106,8 @@ elif args.restore:
     dotfiles.restore()
 elif args.tar:
     dotfiles.make_tar()
+elif args.clip:
+    dotfiles.clip()
 elif len(extras) > 1 and extras[0] == "git":
     dotfiles.git_passthrough(extras)
 else:

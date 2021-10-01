@@ -5,7 +5,7 @@
   - default hide from --tar
   - consider relation to other features
 
-- [ ] `--init` Boostrap a machine without a current dotfiles repo
+- [ ] `--init` Bootstrap a machine without a current dotfiles repo
     - install dependencies (fzf, git)
         - [ ] Ubuntu
         - [ ] Arch
@@ -25,14 +25,15 @@
         like to restore any of the backed up versions. If Yes, then fzf select 
         which files to move from backup to live. Show diff as preview when 
         selecting.
-  
 
-- [ ] `--clip` search for files and put them into the clipboard
-    - optionally, put files into the tmux buffer if within tmux
-
-- [  ] `--rofi` / `--dmnu` options for the `--edit` command which gives a GUI 
+- [  ] `--rofi` / `--dmenu` options for the `--edit` command which gives a GUI 
   quick selector
     - Potential idea: allow the same for the `--run` command but without the 
       added logic of being able to pass parameters to the command.
 
 - [ ] `--branch` switch to or checkout branches
+
+### Done
+
+- [X] `--clip` search for files and put them into the clipboard
+    - optionally, put files into the tmux buffer if within tmux

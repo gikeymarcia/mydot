@@ -4,3 +4,7 @@ class MissingRepositoryLocation(Exception):
 
 class WorktreeMissing(Exception):
     pass
+
+
+class MissingProgram(Exception):
+    pass

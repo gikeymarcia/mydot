@@ -1,4 +1,5 @@
 # Mikey Garcia, @gikeymarcia
+# https://github.com/gikeymarcia/mydot
 
 from pathlib import Path
 from typing import List

@@ -52,10 +52,11 @@ dotfiles using a bare git repo + [`fzf`][fzf] magic!
     d. --discard # discard unstaged changes from work tree
 
     d. --tar    # make a tarball of your dotfiles
+    d. --clip   # put file paths into the clipboard
     d. --status # see the state of your repo
     d. --ls     # list all files under version control
 
-    d. --help   # see more detials about available commands
+    d. --help   # see more details about available commands
     ```
 
 ## Going Deeper

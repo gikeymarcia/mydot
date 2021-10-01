@@ -17,6 +17,7 @@ from pydymenu import fzf
 from mydot.console import console
 from mydot.exceptions import MissingRepositoryLocation, WorktreeMissing
 from mydot.system_funcs import script_plus_args
+from mydot.clip import Clipper, find_clipper
 
 
 class Dotfiles:
@@ -214,6 +215,24 @@ class Dotfiles:
             "tar xvf dotfiles.tar.gz"
         )
         return tarball
+
+    def clip(self, clipper: Clipper = None) -> List[str]:
+        """Choose file(s) and copy their path(s) to the clipboard."""
+        if clipper is None:
+            clipper = find_clipper()
+        clips = fzf(
+            self.list_all,
+            prompt="Pick files to add to the clipboard.",
+            multi=True,
+            preview=f"{self.preview_app}" + " {}",
+        )
+        if clips is None:
+            sys_exit("No selection made. Cancelling action.")
+        else:
+            abs_paths = [str((self.work_tree / c).resolve()) for c in clips]
+            combined = " ".join(abs_paths)
+            clipper.clip(combined)
+            return abs_paths
 
     # PROPERTIES
     @cached_property
