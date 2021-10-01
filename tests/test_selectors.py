@@ -116,9 +116,14 @@ def fake_repo(tmp_path):
             "appears in": [],
         },
         {
-            "path": worktree / "add me-fool",
+            "path": worktree / "newly added",
             "stages": ["create", "add"],
             "appears in": ["adds_staged", "list", "restore"],
+        },
+        {
+            "path": worktree / "added then modified",
+            "stages": ["create", "add", "edit2"],
+            "appears in": ["adds_staged", "list", "restore", "modified_unstaged"],
         },
     ]
 
@@ -133,7 +138,7 @@ def fake_repo(tmp_path):
             git_action(["add", fp])
     git_action(["commit", "-m", "first commit"])
 
-    # edit / delete / stage / create
+    # edit / delete / rename / stage / create / add / edit2
     for file in repofiles:
         fp, stages = file["path"], file["stages"]
         if "edit" in stages:
