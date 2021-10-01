@@ -1,25 +1,39 @@
 # Project Ideas
 
-- [ ] `--private` build up a filter of files marked 'private'
-  - hide from previews
-  - default hide from --tar
-  - consider relation to other features
-
 - [ ] `--init` Bootstrap a machine without a current dotfiles repo
+    - Add `d.` alias and `$DOTFILES` variable
+        - `>> .zshrc` AND `>> ~/.bashrc`
+            - `export DOTFILES="$HOME/.config/dotfiles/"`
+            - `alias d.="python -m mydot"`
+            - `export DOTFILES="$HOME/.config/dotfiles/"`
+            - `alias d.="python -m mydot"`
+
+        - initialize the repo (README step 2)
+    - `git config --local status.showUntrackedFiles no`
     - install dependencies (fzf, git)
         - [ ] Ubuntu
         - [ ] Arch
         - [ ] RHEL
         - what else?
-    - Add `d.` alias and `$DOTFILES` variable to `~/.bashrc`
-        - make it work with `zsh` too. Figure out how. `.zshrc`? 
-    - initialize the repo (README step 2)
-    - `git config --local status.showUntrackedFiles no`
+
+- [ ] `--dir` get directory selection
+
+    ```bash
+    alias d.j='source move-term.sh python -m mydot --dir'
+    ```
+
+    - When used with `move-term.sh` I'll be able to **jump** to any folder 
+    containing one of my tracked dotfiles.
+
+- [ ] `--private` build up a filter of files marked 'private'
+  - hide from previews
+  - default hide from --tar
+  - consider relation to other features
 
 - [ ] `--import` Pass the location of a dotfiles repository and pull it's 
-  contents down into the current user's `$HOME`
-    - attempt to do a `git checkout` and if there are any conflicts move those 
-      files into a `~/.backup-dotfiles/` folder.
+contents down into the current user's `$HOME`
+    - attempt a `git checkout`; move conflicted files into 
+    `~/.backup-dotfiles/` folder if conflicts are found.
       - Maintain directory structure relative to work-tree and after the import 
         tell the user which files were moved to backups. Ask `Y/n` if they'd 
         like to restore any of the backed up versions. If Yes, then fzf select 

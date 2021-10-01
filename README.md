@@ -17,7 +17,8 @@ dotfiles using a bare git repo + [`fzf`][fzf] magic!
     - `DOTFILES`: variable pointing to your local `--bare` dotfiles repository
     - `d.` alias to invoke `mydot`'s command line interface
 
-2. **Initialize dotfiles repository:** First open a new shell or `source ~/.bashrc`{.bash} then:
+2. **Initialize dotfiles repository:** First open a new shell or `source 
+   ~/.bashrc` then:
 
     ```bash
     mkdir -pv $DOTFILES         # create directory
