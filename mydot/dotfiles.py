@@ -133,6 +133,7 @@ class Dotfiles:
 
     def run_executable(self) -> str:
         """Interactively choose an executable to run. Optionally add arguements."""
+        chdir(self.run_from)
         exe = fzf(
             self.executables,
             prompt="Pick a file to run: ",
