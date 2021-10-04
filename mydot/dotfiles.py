@@ -14,19 +14,22 @@ from typing import List, Union
 
 from pydymenu import fzf
 
+from mydot.clip import Clipper, find_clipper
 from mydot.console import console
 from mydot.exceptions import MissingRepositoryLocation, WorktreeMissing
 from mydot.system_funcs import script_plus_args
-from mydot.clip import Clipper, find_clipper
 
+
+# Custom Type
+OptionalPath = Union[Path, str, None]
 
 class Dotfiles:
     """Power up control of your dotfiles with fzf and python."""
 
     def __init__(
         self,
-        local_bare_repo: Union[Path, str, None] = None,
-        work_tree: Union[Path, str, None] = None,
+        local_bare_repo: OptionalPath = None,
+        work_tree: OptionalPath = None,
     ):
         """Create a new Dotfiles object to manage your repository.
 
@@ -45,7 +48,7 @@ class Dotfiles:
         chdir(self.work_tree)
 
     @staticmethod
-    def _resolve_repo_location(path_loc: Union[str, Path, None]) -> Path:
+    def _resolve_repo_location(path_loc: OptionalPath) -> Path:
         """Decides which dotfile repository location will be used.
 
         When None is given, try to read $DOTFILES from environment.
@@ -62,7 +65,7 @@ class Dotfiles:
             return Path(path_loc) if isinstance(path_loc, str) else path_loc
 
     @staticmethod
-    def _resolve_work_tree_location(dir: Union[Path, str, None]) -> Path:
+    def _resolve_work_tree_location(dir: OptionalPath) -> Path:
         """Define work tree location.
 
         When None given presume Path.home()
@@ -70,7 +73,7 @@ class Dotfiles:
         if dir is None:
             return Path.home()
         else:
-            work_tree = Path(dir) if isinstance(dir, str) else dir
+            work_tree: Path = Path(dir) if isinstance(dir, str) else dir
             if work_tree.is_dir():
                 return work_tree
             else:
