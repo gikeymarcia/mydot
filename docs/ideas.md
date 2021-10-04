@@ -29,6 +29,7 @@
   - hide from previews
   - default hide from --tar
   - consider relation to other features
+  - put folder in `$XDG_CONFIG_HOME/mydot`
 
 - [ ] `--import` Pass the location of a dotfiles repository and pull it's 
 contents down into the current user's `$HOME`
@@ -47,7 +48,12 @@ contents down into the current user's `$HOME`
 
 - [ ] `--branch` switch to or checkout branches
 
+- [ ] Use the [`tarfile` module][tarfile] for the `--tar` command
+
 ### Done
 
 - [X] `--clip` search for files and put them into the clipboard
     - optionally, put files into the tmux buffer if within tmux
+
+[tarfile]: <https://docs.python.org/3/library/tarfile.html#module-tarfile>
+"tarfile -- Read and write tar archive files"
