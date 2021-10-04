@@ -80,9 +80,9 @@ group.add_argument(
     action="store_true",
 )
 group.add_argument(
-    "-ls",
+    "-l",
     "--list",
-    help="list all files in the repo",
+    help="List all dotfiles in the work tree",
     action="store_true",
 )
 args, extras = parser.parse_known_args()
