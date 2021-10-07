@@ -23,6 +23,7 @@ from mydot.system_funcs import script_plus_args
 # Custom Type
 OptionalPath = Union[Path, str, None]
 
+
 class Dotfiles:
     """Power up control of your dotfiles with fzf and python."""
 
@@ -136,7 +137,6 @@ class Dotfiles:
 
     def run_executable(self) -> str:
         """Interactively choose an executable to run. Optionally add arguements."""
-        chdir(self.run_from)
         exe = fzf(
             self.executables,
             prompt="Pick a file to run: ",
@@ -146,6 +146,7 @@ class Dotfiles:
         if exe is None:
             sys_exit("No selection made. Cancelling action.")
         else:
+            chdir(self.run_from)
             command = script_plus_args(Path(self.work_tree) / exe[0])
             run(command)
             return str(exe[0])
@@ -226,7 +227,7 @@ class Dotfiles:
             clipper = find_clipper()
         clips = fzf(
             self.list_all,
-            prompt="Pick files to add to the clipboard.",
+            prompt="Pick files to add to the clipboard: ",
             multi=True,
             preview=f"{self.preview_app}" + " {}",
         )
