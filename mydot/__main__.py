@@ -6,6 +6,7 @@ import argparse
 
 from mydot import Dotfiles
 from mydot.console import my_theme, rich_text
+from mydot.bootstrap import CreateRepo
 
 
 rich_str = {
@@ -85,9 +86,18 @@ group.add_argument(
     help="List all dotfiles in the work tree",
     action="store_true",
 )
+group.add_argument(
+    "--init",
+    help="Quickstart a dotfiles repo.",
+    action="store_true",
+)
 args, extras = parser.parse_known_args()
-dotfiles = Dotfiles()
 
+if args.init:
+    new = CreateRepo()
+    new.bootstrap_dotfiles()
+
+dotfiles = Dotfiles()
 if args.edit:
     dotfiles.edit_files()
 elif args.add:

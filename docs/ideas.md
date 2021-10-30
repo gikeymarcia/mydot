@@ -16,6 +16,9 @@
         - [ ] RHEL
         - what else?
 
+- [ ] `--tui` Heads up display of the state of your dotfiles
+    - https://github.com/willmcgugan/textual
+
 - [ ] `--dir` get directory selection
 
     ```bash

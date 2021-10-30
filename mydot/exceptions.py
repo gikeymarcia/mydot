@@ -8,3 +8,7 @@ class WorktreeMissing(Exception):
 
 class MissingProgram(Exception):
     pass
+
+
+class RepoAlreadyExists(Exception):
+    pass
