@@ -3,6 +3,7 @@
 # testing
 pytest
 ipdb
+mypy
 
 # dev tooling
 pynvim
