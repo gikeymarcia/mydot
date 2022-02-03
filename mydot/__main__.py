@@ -69,7 +69,7 @@ group.add_argument(
     action="store_true",
 )
 group.add_argument(
-    "--tar",
+    "--export",
     help="Make a tarball of tracked dotfiles @ work-tree/dotfiles.tar.gz",
     action="store_true",
 )
@@ -104,7 +104,7 @@ elif args.discard:
     dotfiles.discard_changes()
 elif args.restore:
     dotfiles.restore()
-elif args.tar:
+elif args.export:
     dotfiles.make_tar()
 elif args.clip:
     dotfiles.clip()

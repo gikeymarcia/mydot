@@ -212,7 +212,7 @@ class Dotfiles:
         """Make tarball of dotfiles @ self.work_tree / 'dotfiles.tar.gz'."""
         # TODO: incorporate a 'privatemask' feature
         tarball = self.work_tree / "dotfiles.tar.gz"
-        tar_cmd = ["tar", "cvzf", tarball] + self.list_all
+        tar_cmd = ["tar", "cvzf", tarball] + self.list_all + [self.bare_repo]
         run(tar_cmd)
         print("-" * 20)
         print(
