@@ -5,7 +5,7 @@
 # Standard Library
 # https://docs.python.org/3/library/functools.html?highlight=functools#functools.cached_property
 from functools import cached_property
-from os import X_OK, access, chdir, getenv
+import os
 from pathlib import Path
 from shutil import which
 from subprocess import run
@@ -46,7 +46,7 @@ class Dotfiles:
             f"--work-tree={self.work_tree}",
         ]
         self.run_from: Path = Path.cwd()
-        chdir(self.work_tree)
+        os.chdir(self.work_tree)
 
     @staticmethod
     def _resolve_repo_location(path_loc: OptionalPath) -> Path:
@@ -56,7 +56,7 @@ class Dotfiles:
         When a location is specified return it's Path
         """
         if path_loc is None:
-            if env_val := getenv("DOTFILES", default=None):
+            if env_val := os.getenv("DOTFILES", default=None):
                 return Path(env_val)
             else:
                 raise MissingRepositoryLocation(
@@ -146,7 +146,7 @@ class Dotfiles:
         if exe is None:
             sys_exit("No selection made. Cancelling action.")
         else:
-            chdir(self.run_from)
+            os.chdir(self.run_from)
             command = script_plus_args(Path(self.work_tree) / exe[0])
             run(command)
             return str(exe[0])
@@ -312,7 +312,7 @@ class Dotfiles:
         return [
             str(Path(e).relative_to(self.work_tree))
             for e in self.list_all_as_path
-            if access(e, X_OK)
+            if os.access(e, os.X_OK)
         ]
 
     def freshen(self) -> None:
@@ -382,7 +382,7 @@ class Dotfiles:
     @cached_property
     def editor(self) -> str:
         """Preference: $EDITOR > nvim > vim > nano > emacs."""
-        if env := getenv("EDITOR", None):
+        if env := os.getenv("EDITOR", None):
             return env
         else:
             for prog in ["nvim", "vim", "nano", "emacs"]:
@@ -393,7 +393,7 @@ class Dotfiles:
 
     def git_passthrough(self, args: List[str]):
         """Send commands to git with --git-dir and --work-tree set."""
-        chdir(self.run_from)
+        os.chdir(self.run_from)
         run(self._git_base + args[1:])
 
 
