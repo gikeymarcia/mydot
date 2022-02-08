@@ -211,8 +211,13 @@ class Dotfiles:
     def make_tar(self) -> Path:
         """Make tarball of dotfiles @ self.work_tree / 'dotfiles.tar.gz'."""
         # TODO: incorporate a 'privatemask' feature
+        os.chdir(self.work_tree)
         tarball = self.work_tree / "dotfiles.tar.gz"
-        tar_cmd = ["tar", "cvzf", tarball] + self.list_all + [self.bare_repo]
+        tar_cmd = (
+            ["tar", "cvzf", tarball]
+            + self.list_all
+            + [self.bare_repo.relative_to(self.work_tree)]
+        )
         run(tar_cmd)
         print("-" * 20)
         print(
