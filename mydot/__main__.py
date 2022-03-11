@@ -87,8 +87,17 @@ group.add_argument(
 )
 args, extras = parser.parse_known_args()
 dotfiles = Dotfiles()
+# TODO add --history
+# $(git log --oneline -- bootstrap.yml | awk '{print $1'} | fzf --preview="git show {}:bootstrap.yml"')
+# flow: d. --history
+#   1. pick file
+#   2. get list of hashes
+#   3. fzf picker with preview of each version
+#   4. Upon selection open file in split view with current version
+
 
 if args.edit:
+    # TODO: throw error when DOTFILES is not defined
     dotfiles.edit_files()
 elif args.add:
     dotfiles.add_changes()
