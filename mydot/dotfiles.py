@@ -7,12 +7,12 @@
 from functools import cached_property
 import os
 from pathlib import Path
-from shutil import which
-from subprocess import run
+import shutil
+import subprocess
 from sys import exit as sys_exit
-from typing import List, Union
+from typing import List, Optional, Union
 
-from pydymenu import fzf
+import pydymenu
 
 from mydot.clip import Clipper, find_clipper
 from mydot.console import console
@@ -84,14 +84,14 @@ class Dotfiles:
     def show_status(self) -> None:
         """Short pretty formatted info about the repo state."""
         console.print("Branches:", style="header")
-        run(self._git_base + ["branch", "-a"])
+        subprocess.run(self._git_base + ["branch", "-a"])
         console.print("\nModified Files:", style="header")
-        run(self._git_base + ["status", "-s"])
+        subprocess.run(self._git_base + ["status", "-s"])
 
     # ACTIONS
     def edit_files(self) -> List[str]:
         """Interactively choose dotfiles to open in text editor."""
-        edits = fzf(
+        edits = pydymenu.fzf(
             self.list_all,
             prompt="Pick file(s) to edit: ",
             multi=True,
@@ -101,16 +101,16 @@ class Dotfiles:
             sys_exit("No selection made. Cancelling action.")
         else:
             if len(edits) == 1:
-                run([self.editor, edits[0]])
+                subprocess.run([self.editor, edits[0]])
             else:
-                run([self.editor, "-o"] + edits)
+                subprocess.run([self.editor, "-o"] + edits)
             self.freshen()
             return edits
 
     def grep(self, regex: str) -> List[str]:
         """Interactively choose dotfiles to open in text editor."""
         # LATER make it work for multiple regex searches
-        proc = run(
+        proc = subprocess.run(
             ["grep", "-I", "-l", regex] + self.list_all,
             capture_output=True,
             text=True,
@@ -118,7 +118,7 @@ class Dotfiles:
         hits = [h for h in proc.stdout.split("\n") if len(h) > 0]
         if len(hits) == 0:
             sys_exit("No matches for your regex search found in tracked dotfiles.")
-        choices = fzf(
+        choices = pydymenu.fzf(
             hits,
             prompt="Choose files to open: ",
             multi=True,
@@ -127,9 +127,9 @@ class Dotfiles:
         # TODO: abstract these functions into an Opener(ABC/Protocol)
         if choices is not None:
             if len(choices) == 1:
-                run([self.editor, "-c", f"/{regex}", choices[0]])
+                subprocess.run([self.editor, "-c", f"/{regex}", choices[0]])
             else:
-                run([self.editor, "-o", "-c", f"/{regex}"] + choices)
+                subprocess.run([self.editor, "-o", "-c", f"/{regex}"] + choices)
             self.freshen()
             return choices
         else:
@@ -137,7 +137,7 @@ class Dotfiles:
 
     def run_executable(self) -> str:
         """Interactively choose an executable to run. Optionally add arguements."""
-        exe = fzf(
+        exe = pydymenu.fzf(
             self.executables,
             prompt="Pick a file to run: ",
             multi=False,
@@ -148,13 +148,13 @@ class Dotfiles:
         else:
             os.chdir(self.run_from)
             command = script_plus_args(Path(self.work_tree) / exe[0])
-            run(command)
+            subprocess.run(command)
             return str(exe[0])
 
     def add_changes(self) -> List[str]:
         """Interactively choose modified files to add to the staging area."""
         if self.modified_unstaged:
-            adding = fzf(
+            adding = pydymenu.fzf(
                 self.modified_unstaged,
                 prompt="Choose changes to add: ",
                 multi=True,
@@ -163,7 +163,7 @@ class Dotfiles:
             if adding is None:
                 sys_exit("No selection made. No changes will be staged.")
             else:
-                run(self._git_base + ["add", "-v", "--"] + adding)
+                subprocess.run(self._git_base + ["add", "-v", "--"] + adding)
                 self.freshen()
                 return adding
         else:
@@ -172,7 +172,7 @@ class Dotfiles:
     def restore(self) -> List[str]:
         """Interactively choose files to remove from the staging area."""
         if self.restorables:
-            restores = fzf(
+            restores = pydymenu.fzf(
                 self.restorables,
                 prompt="Choose changes to remove from staging area: ",
                 multi=True,
@@ -181,7 +181,9 @@ class Dotfiles:
             if restores is None:
                 sys_exit("No selection made. No files will be unstaged.")
             else:
-                run(self._git_base + ["restore", "--staged", "--"] + restores)
+                subprocess.run(
+                    self._git_base + ["restore", "--staged", "--"] + restores
+                )
                 self.freshen()
                 return restores
         else:
@@ -192,7 +194,7 @@ class Dotfiles:
         """Discard changes from file(s) in the working directory."""
         unstaged = self.modified_unstaged
         if unstaged:
-            discards = fzf(
+            discards = pydymenu.fzf(
                 unstaged,
                 prompt="Choose changes to discard: ",
                 multi=True,
@@ -201,7 +203,7 @@ class Dotfiles:
             if discards is None:
                 sys_exit("No selection made. No changes will be discarded.")
             else:
-                run(self._git_base + ["restore", "--"] + discards)
+                subprocess.run(self._git_base + ["restore", "--"] + discards)
                 self.freshen()
                 return discards
         else:
@@ -218,7 +220,7 @@ class Dotfiles:
             + self.list_all
             + [self.bare_repo.relative_to(self.work_tree)]
         )
-        run(tar_cmd)
+        subprocess.run(tar_cmd)
         print("-" * 20)
         print(
             "tarball ready. Place in work-tree and expand with:\n"
@@ -226,11 +228,11 @@ class Dotfiles:
         )
         return tarball
 
-    def clip(self, clipper: Clipper = None) -> List[str]:
+    def clip(self, clipper: Optional[Clipper] = None) -> List[str]:
         """Choose file(s) and copy their path(s) to the clipboard."""
         if clipper is None:
             clipper = find_clipper()
-        clips = fzf(
+        clips = pydymenu.fzf(
             self.list_all,
             prompt="Pick files to add to the clipboard: ",
             multi=True,
@@ -248,7 +250,7 @@ class Dotfiles:
     @cached_property
     def short_status(self) -> List[str]:
         """List of lines in git status porecelain=v1 format (except renames)."""
-        output = run(
+        output = subprocess.run(
             self._git_base
             + ["status", "--short", "--untracked-files=no", "--porcelain", "-z"],
             text=True,
@@ -274,7 +276,7 @@ class Dotfiles:
 
     @property
     def tracked(self) -> List[str]:
-        output_lines = run(
+        output_lines = subprocess.run(
             self._git_base
             + ["ls-tree", "--full-tree", "--full-name", "-r", "HEAD", "-z"],
             text=True,
@@ -375,11 +377,11 @@ class Dotfiles:
     @cached_property
     def preview_app(self) -> str:
         """Return: bat > batcat > highlight > cat."""
-        if which("bat"):
+        if shutil.which("bat"):
             return "bat --color=always"
-        elif which("batcat"):
+        elif shutil.which("batcat"):
             return "batcat --color=always"
-        elif which("highlight"):
+        elif shutil.which("highlight"):
             return "highlight -O ansi"
         else:
             return "cat"
@@ -391,7 +393,7 @@ class Dotfiles:
             return env
         else:
             for prog in ["nvim", "vim", "nano", "emacs"]:
-                if bin := which(prog):
+                if bin := shutil.which(prog):
                     return bin
             else:
                 sys_exit("Cannot find a suitable editor, and boy did we look!")
@@ -399,7 +401,7 @@ class Dotfiles:
     def git_passthrough(self, args: List[str]):
         """Send commands to git with --git-dir and --work-tree set."""
         os.chdir(self.run_from)
-        run(self._git_base + args[1:])
+        subprocess.run(self._git_base + args[1:])
 
 
 # vim: foldlevel=1 :

@@ -1,25 +1,58 @@
-# Project Design Goals
+# Project Architecture
 
-`alias d="python -m mydot"`{.bash}
+As-is the `Dotfiles` class is doing too much. It needs to be split up into
+smaller units with more clear responsiblities.
 
-#### Commands
+Objects:
 
-```bash
-# fzf files from current working directory
-d add - 
+- Repository(bare_repo, work_tree)
+    - Make a new Dotfile() class that is a file_path + powers
+    - Should only be used to query types of files in the repo
+    - properties -> Iterable[Dotfile]
+        - **list_all**
+        - **deleted_staged**: Return all files staged for deletion
+        - **modified_unstaged**
+        - **modified_staged**
+        - **modified_unstaged**
+        - **restorables**: all files affected by `git restore --staged`.
+        - **work_tree**
+        - **bare_repo**
+        - **short_status**
+        - **tracked**
+        - **adds_staged**: list of newly added files to the staging area
+        - **oldnames**: previous name of files renamed in staging area.
+        - **renames**: Files renamed
 
-# establish/switch to a context which can turn on/off/rollback other contexts
-d context laptop
+- Filter = Callable[..., Iterable[Dotfile]]
+    - `__init__(self, source: Repository)`
+    - NoBinaries(Repository)
+    - Relative_to(Repository, Repository.work_tree)
+    - Executable(Repository)
 
-d context laptop
 
-# fzf screen for actions (on, off, versions)
-# screen to choose contexts
-#   tmux nvim sound i3 python
-# Once selected you can turn the configs on, off, 
-#   or choose an alternative version of it
+- My Dot Actions
+    - Edit
+    - Clip
+    - Add
+    - Export
+    - Git
+    - Run
+    - Grep
+    - Restore
+    - Discard
+    - Status
+    - List2
 
-# You can follow each other and serve as one another's backups and share useful
-# tools and practices.
+- Make previewers use solid design. Think about the [factory design
+  pattern][factory].
 
-```
+    ```python
+    class Previewer(Protocol)
+
+        def view(filepath: Path) -> str:
+            pass
+    ```
+
+
+[factory]: <https://www.geeksforgeeks.org/factory-method-python-design-patterns/>
+"Factory Method - Python Design Patterns @ GeeksforGeeks"

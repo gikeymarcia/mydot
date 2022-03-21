@@ -1,10 +1,9 @@
 # Mikey Garcia, @gikeymarcia
 # https://github.com/gikeymarcia/mydot
 
+import shutil
+import subprocess as sp
 from typing import Protocol
-from subprocess import run
-from shutil import which
-from mydot.exceptions import MissingProgram
 
 
 class Clipper(Protocol):
@@ -18,14 +17,14 @@ class Clipper(Protocol):
         print(f"'{data}'")
 
     def has_app(self) -> bool:
-        return False if which(self.name) is None else True
+        return False if shutil.which(self.name) is None else True
 
 
 class Xclip(Clipper):
     name = "xclip"
 
     def clip(self, data: str):
-        run(["xclip", "-selection", "clipboard"], input=data.encode("utf-8"))
+        sp.run(["xclip", "-selection", "clipboard"], input=data.encode("utf-8"))
         self.success(data)
 
 
@@ -33,7 +32,7 @@ class Xsel(Clipper):
     name = "xsel"
 
     def clip(self, data: str):
-        run(["xsel", "-ib"], input=data.encode("utf-8"))
+        sp.run(["xsel", "-ib"], input=data.encode("utf-8"))
         self.success(data)
 
 
@@ -41,7 +40,7 @@ class Pbcopy(Clipper):
     name = "pbcopy"
 
     def clip(self, data: str):
-        run(["pbcopy"], input=data.encode("utf-8"))
+        sp.run(["pbcopy"], input=data.encode("utf-8"))
         self.success(data)
 
 
