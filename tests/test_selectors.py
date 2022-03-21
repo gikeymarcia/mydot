@@ -168,7 +168,7 @@ def fake_repo(tmp_path):
         "init": init,
         "git": git_action,
         "repofiles": repofiles,
-        "df": mydot.Dotfiles(bare, worktree),
+        "df": mydot.Repository(bare, worktree),
         "status": run_status,
         "tree": sp.run(["tree", "-C", "-p", worktree], capture_output=True),
     }

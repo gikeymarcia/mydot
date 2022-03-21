@@ -4,7 +4,7 @@
 
 import argparse
 
-from mydot import Dotfiles
+from mydot import Repository
 from mydot.console import my_theme, rich_text
 
 
@@ -86,7 +86,7 @@ group.add_argument(
     action="store_true",
 )
 args, extras = parser.parse_known_args()
-dotfiles = Dotfiles()
+dotfiles = Repository()
 # TODO add --history
 # $(git log --oneline -- bootstrap.yml | awk '{print $1'} | fzf --preview="git show {}:bootstrap.yml"')
 # flow: d. --history

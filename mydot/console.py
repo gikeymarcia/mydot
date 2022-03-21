@@ -1,6 +1,6 @@
 from rich.console import Console
 from rich.theme import Theme
-from typing import Union
+from typing import Optional
 
 my_theme = Theme(
     {
@@ -16,7 +16,7 @@ my_theme = Theme(
 
 def rich_text(
     rich_markup: str,
-    theme: Union[None, Theme] = None,
+    theme: Optional[Theme] = None,
     **rich_print_opts,
 ) -> str:
     """Accept rich markup and return stylized text suitable for print()."""

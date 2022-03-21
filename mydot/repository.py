@@ -24,9 +24,17 @@ from mydot.system_funcs import script_plus_args
 OptionalPath = Union[Path, str, None]
 
 
-class Dotfiles:
+class Repository:
     """Power up control of your dotfiles with fzf and python."""
 
+    #
+    #      _
+    #  ___| |_ __ _ _   _
+    # / __| __/ _` | | | |
+    # \__ \ || (_| | |_| |
+    # |___/\__\__,_|\__, |
+    #               |___/
+    # All of these functions are staying
     def __init__(
         self,
         local_bare_repo: OptionalPath = None,
@@ -80,6 +88,131 @@ class Dotfiles:
             else:
                 msg = "Missing work-tree directory!\n" f"{work_tree} doesn't exist"
                 raise WorktreeMissing(msg)
+
+    # Query Git
+    @cached_property
+    def short_status(self) -> List[str]:
+        """List of lines in git status porecelain=v1 format (except renames)."""
+        output = subprocess.run(
+            self._git_base
+            + ["status", "--short", "--untracked-files=no", "--porcelain", "-z"],
+            text=True,
+            capture_output=True,
+        ).stdout
+
+        pieces = [p for p in output.split("\x00") if p]
+        length = len(pieces)
+        pos = 0
+        result = []
+        while pos < length:
+            if pieces[pos][0] == "R":
+                stem = pieces[pos][:3]
+                old = pieces[pos + 1]
+                new = pieces[pos][3:]
+                sep = " -> "
+                result.append(f"{stem}{old}{sep}{new}")
+                pos += 2
+            else:
+                result.append(pieces[pos])
+                pos += 1
+        return result
+
+    @property
+    def tracked(self) -> List[str]:
+        output_lines = subprocess.run(
+            self._git_base
+            + ["ls-tree", "--full-tree", "--full-name", "-r", "HEAD", "-z"],
+            text=True,
+            capture_output=True,
+        ).stdout.split("\x00")
+        return [row.split("\t")[-1] for row in output_lines if len(row) > 0]
+
+    @cached_property
+    def list_all(self) -> List[str]:
+        """List of all files in repo [+new adds, -things going ]. (relative paths)"""
+        include = self.tracked + self.adds_staged + self.renames
+        removed = self.deleted_staged + self.oldnames
+        all = [f for f in include if f not in removed]
+        return sorted(list(set(all)))
+
+    @cached_property
+    def _git_str(self) -> str:
+        """String representation of _git_base command."""
+        return " ".join(self._git_base).strip()
+
+    # ADDS
+    @property
+    def adds_staged(self) -> List[str]:
+        """Returns list of newly added files to the staging area."""
+        return [f[3:] for f in self.short_status if f[0] == "A"]
+
+    # DELETES
+    @property
+    def deleted_staged(self) -> List[str]:
+        """Returns all files staged for deletion."""
+        return [stat[3:] for stat in self.short_status if stat[0] == "D"]
+
+    @property
+    def oldnames(self) -> List[str]:
+        """Returns previous name of files renamed in staging area."""
+        return [
+            stat[3:].split(" -> ")[0] for stat in self.short_status if stat[0] == "R"
+        ]
+
+    @property
+    def renames(self) -> List[str]:
+        return [line.split(" -> ")[1] for line in self.short_status if line[0] == "R"]
+
+    # MODIFIED
+    @property
+    def modified_staged(self) -> List[str]:
+        """Returns files with staged modifications."""
+        return [stat[3:] for stat in self.short_status if stat[0] == "M"]
+
+    @property
+    def modified_unstaged(self) -> List[str]:
+        """Returns all files with unstaged modifications or Deletions."""
+        mod_codes = [" M", " D", "MM", "AM"]
+        mods = [line[3:] for line in self.short_status if line[:2] in mod_codes]
+        renamed_mods = [s.split(" -> ")[1] for s in self.short_status if s[:2] == "RM"]
+        return sorted(renamed_mods + mods)
+
+    @cached_property
+    def restorables(self) -> List[str]:
+        """Returns all files which could be affected by `git restore --staged`."""
+        return sorted(self.modified_staged + self.deleted_staged + self.adds_staged)
+
+    # Cache
+    def freshen(self) -> None:
+        """Deltes @cached_property values which forces recompute on next use.
+
+        Very useful for programs building upon Dotfiles. Allows you to take actions,
+        utilize @cached_property values during runtime but request caches be dropped
+        so further runs will request new data from `git`
+        """
+        try:
+            del self.short_status
+        except AttributeError:
+            pass  # ignore failure to delete uncached functions
+        try:
+            del self.list_all
+        except AttributeError:
+            pass
+        try:
+            del self.executables
+        except AttributeError:
+            pass
+        try:
+            del self.restorables
+        except AttributeError:
+            pass
+
+    # All of these functions are breaking from the 'Repository'
+    #  _                    _
+    # | |__  _ __ ___  __ _| | __
+    # | '_ \| '__/ _ \/ _` | |/ /
+    # | |_) | | |  __/ (_| |   <
+    # |_.__/|_|  \___|\__,_|_|\_\
 
     def show_status(self) -> None:
         """Short pretty formatted info about the repo state."""
@@ -247,66 +380,6 @@ class Dotfiles:
             return abs_paths
 
     # PROPERTIES
-    @cached_property
-    def short_status(self) -> List[str]:
-        """List of lines in git status porecelain=v1 format (except renames)."""
-        output = subprocess.run(
-            self._git_base
-            + ["status", "--short", "--untracked-files=no", "--porcelain", "-z"],
-            text=True,
-            capture_output=True,
-        ).stdout
-
-        pieces = [p for p in output.split("\x00") if p]
-        length = len(pieces)
-        pos = 0
-        result = []
-        while pos < length:
-            if pieces[pos][0] == "R":
-                stem = pieces[pos][:3]
-                old = pieces[pos + 1]
-                new = pieces[pos][3:]
-                sep = " -> "
-                result.append(f"{stem}{old}{sep}{new}")
-                pos += 2
-            else:
-                result.append(pieces[pos])
-                pos += 1
-        return result
-
-    @property
-    def tracked(self) -> List[str]:
-        output_lines = subprocess.run(
-            self._git_base
-            + ["ls-tree", "--full-tree", "--full-name", "-r", "HEAD", "-z"],
-            text=True,
-            capture_output=True,
-        ).stdout.split("\x00")
-        return [row.split("\t")[-1] for row in output_lines if len(row) > 0]
-
-    @property
-    def adds_staged(self) -> List[str]:
-        """Returns list of newly added files to the staging area."""
-        return [f[3:] for f in self.short_status if f[0] == "A"]
-
-    @property
-    def oldnames(self) -> List[str]:
-        """Returns previous name of files renamed in staging area."""
-        return [
-            stat[3:].split(" -> ")[0] for stat in self.short_status if stat[0] == "R"
-        ]
-
-    @property
-    def renames(self) -> List[str]:
-        return [line.split(" -> ")[1] for line in self.short_status if line[0] == "R"]
-
-    @cached_property
-    def list_all(self) -> List[str]:
-        """List of all files in repo [+new adds, -things going ]. (relative paths)"""
-        include = self.tracked + self.adds_staged + self.renames
-        removed = self.deleted_staged + self.oldnames
-        all = [f for f in include if f not in removed]
-        return sorted(list(set(all)))
 
     @property
     def list_all_as_path(self) -> List[Path]:
@@ -321,58 +394,6 @@ class Dotfiles:
             for e in self.list_all_as_path
             if os.access(e, os.X_OK)
         ]
-
-    def freshen(self) -> None:
-        """Deltes @cached_property values which forces recompute on next use.
-
-        Very useful for programs building upon Dotfiles. Allows you to take actions,
-        utilize @cached_property values during runtime but request caches be dropped
-        so further runs will request new data from `git`
-        """
-        try:
-            del self.short_status
-        except AttributeError:
-            pass  # ignore failure to delete uncached functions
-        try:
-            del self.list_all
-        except AttributeError:
-            pass
-        try:
-            del self.executables
-        except AttributeError:
-            pass
-        try:
-            del self.restorables
-        except AttributeError:
-            pass
-
-    @property
-    def deleted_staged(self) -> List[str]:
-        """Returns all files staged for deletion."""
-        return [stat[3:] for stat in self.short_status if stat[0] == "D"]
-
-    @property
-    def modified_staged(self) -> List[str]:
-        """Returns files with staged modifications."""
-        return [stat[3:] for stat in self.short_status if stat[0] == "M"]
-
-    @property
-    def modified_unstaged(self) -> List[str]:
-        """Returns all files with unstaged modifications or Deletions."""
-        mod_codes = [" M", " D", "MM", "AM"]
-        mods = [line[3:] for line in self.short_status if line[:2] in mod_codes]
-        renamed_mods = [s.split(" -> ")[1] for s in self.short_status if s[:2] == "RM"]
-        return sorted(renamed_mods + mods)
-
-    @cached_property
-    def restorables(self) -> List[str]:
-        """Returns all files which could be affected by `git restore --staged`."""
-        return sorted(self.modified_staged + self.deleted_staged + self.adds_staged)
-
-    @cached_property
-    def _git_str(self) -> str:
-        """String representation of _git_base command."""
-        return " ".join(self._git_base).strip()
 
     @cached_property
     def preview_app(self) -> str:

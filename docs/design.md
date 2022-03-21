@@ -9,19 +9,18 @@ Objects:
     - Make a new Dotfile() class that is a file_path + powers
     - Should only be used to query types of files in the repo
     - properties -> Iterable[Dotfile]
-        - **list_all**
-        - **deleted_staged**: Return all files staged for deletion
-        - **modified_unstaged**
-        - **modified_staged**
-        - **modified_unstaged**
-        - **restorables**: all files affected by `git restore --staged`.
-        - **work_tree**
-        - **bare_repo**
-        - **short_status**
-        - **tracked**
-        - **adds_staged**: list of newly added files to the staging area
-        - **oldnames**: previous name of files renamed in staging area.
-        - **renames**: Files renamed
+        - [X] **list_all**
+        - [X] **deleted_staged**: Return all files staged for deletion
+        - [X] **modified_unstaged**
+        - [X] **modified_staged**
+        - [X] **restorables**: all files affected by `git restore --staged`.
+        - [X] **work_tree**
+        - [X] **bare_repo**
+        - [X] **short_status**
+        - [X] **tracked**
+        - [X] **adds_staged**: list of newly added files to the staging area
+        - [X] **oldnames**: previous name of files renamed in staging area.
+        - [X] **renames**: Files renamed
 
 - Filter = Callable[..., Iterable[Dotfile]]
     - `__init__(self, source: Repository)`
