@@ -361,24 +361,6 @@ class Repository:
         )
         return tarball
 
-    def clip(self, clipper: Optional[Clipper] = None) -> List[str]:
-        """Choose file(s) and copy their path(s) to the clipboard."""
-        if clipper is None:
-            clipper = find_clipper()
-        clips = pydymenu.fzf(
-            self.list_all,
-            prompt="Pick files to add to the clipboard: ",
-            multi=True,
-            preview=f"{self.preview_app}" + " {}",
-        )
-        if clips is None:
-            sys_exit("No selection made. Cancelling action.")
-        else:
-            abs_paths = [str((self.work_tree / c).resolve()) for c in clips]
-            combined = " ".join(abs_paths)
-            clipper.clip(combined)
-            return abs_paths
-
     # PROPERTIES
 
     @property
@@ -418,11 +400,6 @@ class Repository:
                     return bin
             else:
                 sys_exit("Cannot find a suitable editor, and boy did we look!")
-
-    def git_passthrough(self, args: List[str]):
-        """Send commands to git with --git-dir and --work-tree set."""
-        os.chdir(self.run_from)
-        subprocess.run(self._git_base + args[1:])
 
 
 # vim: foldlevel=1 :

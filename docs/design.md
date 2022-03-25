@@ -30,17 +30,17 @@ Objects:
 
 
 - My Dot Actions
-    - Edit
-    - Clip
-    - Add
-    - Export
-    - Git
-    - Run
-    - Grep
-    - Restore
-    - Discard
-    - Status
-    - List2
+    - [X] Clip
+    - [X] Git
+    - [ ] Edit
+    - [ ] Add
+    - [ ] Export
+    - [ ] Run
+    - [ ] Grep
+    - [ ] Restore
+    - [ ] Discard
+    - [ ] Status
+    - [ ] List2
 
 - Make previewers use solid design. Think about the [factory design
   pattern][factory].

@@ -5,6 +5,7 @@
 import argparse
 
 from mydot import Repository
+from mydot.actions import Clipboard, GitPassthrough
 from mydot.console import my_theme, rich_text
 
 
@@ -85,7 +86,7 @@ group.add_argument(
     help="List all dotfiles in the work tree",
     action="store_true",
 )
-args, extras = parser.parse_known_args()
+args, extra_args = parser.parse_known_args()
 dotfiles = Repository()
 # TODO add --history
 # $(git log --oneline -- bootstrap.yml | awk '{print $1'} | fzf --preview="git show {}:bootstrap.yml"')
@@ -116,9 +117,9 @@ elif args.restore:
 elif args.export:
     dotfiles.make_tar()
 elif args.clip:
-    dotfiles.clip()
-elif len(extras) > 1 and extras[0] == "git":
-    dotfiles.git_passthrough(extras)
+    Clipboard(dotfiles).run()
+elif len(extra_args) > 1 and extra_args[0] == "git":
+    GitPassthrough(dotfiles, extra_args[1:]).run()
 else:
     parser.parse_args(["-h"])
 

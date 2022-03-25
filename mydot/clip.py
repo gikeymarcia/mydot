@@ -9,14 +9,17 @@ from typing import Protocol
 class Clipper(Protocol):
     name: str
 
-    def clip(self, data: str):
+    def clip(self, data: str) -> None:
+        """Copy data to clipboard."""
         raise NotImplementedError
 
     def success(self, data: str, location: str = "clipboard"):
+        """Print a success message after using a Clipper"""
         print(f"Copied file path(s) to {location}:")
         print(f"'{data}'")
 
     def has_app(self) -> bool:
+        """Return true if this application is on the system, othewise false."""
         return False if shutil.which(self.name) is None else True
 
 
