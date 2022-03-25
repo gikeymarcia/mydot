@@ -4,8 +4,8 @@ import sys
 from typing import List, Optional, Protocol
 
 import pydymenu
-from mydot.clip import Clipper, find_clipper
 
+from mydot.clip import Clipper, find_clipper
 from mydot.repository import Repository
 
 
@@ -15,6 +15,8 @@ class Actions(Protocol):
 
 
 class Clipboard(Actions):
+    """Interactively select file paths to copy to the clipboard."""
+
     def __init__(self, repo: Repository, clipper: Optional[Clipper] = None):
         self.repo = repo
         self.clipper = find_clipper() if clipper is None else clipper
@@ -37,6 +39,8 @@ class Clipboard(Actions):
 
 
 class GitPassthrough(Actions):
+    """Run git commands on the given repository."""
+
     def __init__(self, repo: Repository, git_cmd: List[str]):
         self.repo = repo
         self.cmd = git_cmd
