@@ -1,33 +1,8 @@
 # Project Architecture
 
-As-is the `Dotfiles` class is doing too much. It needs to be split up into
-smaller units with more clear responsiblities.
+## Stage 1
 
-Objects:
-
-- Repository(bare_repo, work_tree)
-    - Make a new Dotfile() class that is a file_path + powers
-    - Should only be used to query types of files in the repo
-    - properties -> Iterable[Dotfile]
-        - [X] **list_all**
-        - [X] **deleted_staged**: Return all files staged for deletion
-        - [X] **modified_unstaged**
-        - [X] **modified_staged**
-        - [X] **restorables**: all files affected by `git restore --staged`.
-        - [X] **work_tree**
-        - [X] **bare_repo**
-        - [X] **short_status**
-        - [X] **tracked**
-        - [X] **adds_staged**: list of newly added files to the staging area
-        - [X] **oldnames**: previous name of files renamed in staging area.
-        - [X] **renames**: Files renamed
-
-- Filter = Callable[..., Iterable[Dotfile]]
-    - `__init__(self, source: Repository)`
-    - NoBinaries(Repository)
-    - Relative_to(Repository, Repository.work_tree)
-    - Executable(Repository)
-
+To begin I'm pulling all of the actions out of the `Repository` class.
 
 - My Dot Actions
     - [X] Clip
@@ -41,6 +16,41 @@ Objects:
     - [ ] Discard
     - [ ] Status
     - [ ] List2
+
+
+
+## Stage 2
+
+
+- [ ] Make a new Dotfile() class that is a file_path + powers
+    - The idea is to use `Repository` to query subsets of the files under
+      version control and make a standardized `Dotfile` object which each
+      property of `Repository` would return an Iterable of.
+
+- Repository(bare_repo, work_tree)
+    - [ ] Only Used to query the `Repository` and each call should return an
+      Iterable of `Dotfile`s.
+        - [ ] **list_all**
+        - [ ] **deleted_staged**: Return all files staged for deletion
+        - [ ] **modified_unstaged**
+        - [ ] **modified_staged**
+        - [ ] **restorables**: all files affected by `git restore --staged`.
+        - [ ] **work_tree**
+        - [ ] **bare_repo**
+        - [ ] **short_status**
+        - [ ] **tracked**
+        - [ ] **adds_staged**: list of newly added files to the staging area
+        - [ ] **oldnames**: previous name of files renamed in staging area.
+        - [ ] **renames**: Files renamed
+
+## On the table - not on the roadmap (yet)
+
+- Filter = Callable[..., Iterable[Dotfile]]
+    - `__init__(self, source: Repository)`
+    - NoBinaries(Repository)
+    - Relative_to(Repository, Repository.work_tree)
+    - Executable(Repository)
+
 
 - Make previewers use solid design. Think about the [factory design
   pattern][factory].
