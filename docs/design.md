@@ -32,9 +32,9 @@ Objects:
 - My Dot Actions
     - [X] Clip
     - [X] Git
-    - [ ] Edit
-    - [ ] Add
+    - [X] Add
     - [ ] Export
+    - [ ] Edit
     - [ ] Run
     - [ ] Grep
     - [ ] Restore

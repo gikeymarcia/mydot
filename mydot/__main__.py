@@ -5,7 +5,7 @@
 import argparse
 
 from mydot import Repository
-from mydot.actions import Clipboard, GitPassthrough
+from mydot.actions import AddChanges, Clipboard, GitPassthrough
 from mydot.console import my_theme, rich_text
 
 
@@ -101,7 +101,7 @@ if args.edit:
     # TODO: throw error when DOTFILES is not defined
     dotfiles.edit_files()
 elif args.add:
-    dotfiles.add_changes()
+    AddChanges(dotfiles).run()
 elif args.status:
     dotfiles.show_status()
 elif args.list:

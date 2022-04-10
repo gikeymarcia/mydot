@@ -284,24 +284,6 @@ class Repository:
             subprocess.run(command)
             return str(exe[0])
 
-    def add_changes(self) -> List[str]:
-        """Interactively choose modified files to add to the staging area."""
-        if self.modified_unstaged:
-            adding = pydymenu.fzf(
-                self.modified_unstaged,
-                prompt="Choose changes to add: ",
-                multi=True,
-                preview=f"{self._git_str} diff --color --minimal -- " + "{}",
-            )
-            if adding is None:
-                sys_exit("No selection made. No changes will be staged.")
-            else:
-                subprocess.run(self._git_base + ["add", "-v", "--"] + adding)
-                self.freshen()
-                return adding
-        else:
-            sys_exit("No unstaged changes to 'add'.")
-
     def restore(self) -> List[str]:
         """Interactively choose files to remove from the staging area."""
         if self.restorables:

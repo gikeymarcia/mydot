@@ -49,4 +49,28 @@ class GitPassthrough(Actions):
         os.chdir(self.repo.run_from)
         subprocess.run(self.repo._git_base + self.cmd)
 
+
+class AddChanges(Actions):
+    def __init__(self, src_repo: Repository):
+        self.repo = src_repo
+
+    def run(self) -> List[str]:
+        modified_unstaged = self.repo.modified_unstaged
+        if modified_unstaged:
+            adding = pydymenu.fzf(
+                modified_unstaged,
+                prompt="Choose changes to add: ",
+                multi=True,
+                preview=f"{self.repo._git_str} diff --color --minimal -- " + "{}",
+            )
+            if adding is None:
+                sys.exit("No selection made. No changes will be staged.")
+            else:
+                subprocess.run(self.repo._git_base + ["add", "-v", "--"] + adding)
+                self.repo.freshen()
+                return adding
+        else:
+            sys.exit("No unstaged changes to 'add'.")
+
+
 # vim: foldlevel=1 :
