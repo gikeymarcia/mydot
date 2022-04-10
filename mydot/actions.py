@@ -73,4 +73,27 @@ class AddChanges(Actions):
             sys.exit("No unstaged changes to 'add'.")
 
 
+class ExportTar(Actions):
+    def __init__(self, src_repo: Repository):
+        self.repo = src_repo
+
+    def run(self):
+        # TODO: incorporate a 'privatemask' feature
+        os.chdir(self.repo.work_tree)
+        tarball = self.repo.work_tree / "dotfiles.tar.gz"
+        tar_cmd = (
+            ["tar", "cvzf", tarball]
+            + self.repo.list_all
+            + [self.repo.bare_repo.relative_to(self.repo.work_tree)]
+        )
+        subprocess.run(tar_cmd)
+        print(
+            "-" * 20,
+            "tarball ready. Place in work-tree and expand with:",
+            "tar xvf dotfiles.tar.gz",
+            sep="\n",
+        )
+        return tarball
+
+
 # vim: foldlevel=1 :

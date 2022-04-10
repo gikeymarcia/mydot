@@ -5,7 +5,7 @@
 import argparse
 
 from mydot import Repository
-from mydot.actions import AddChanges, Clipboard, GitPassthrough
+from mydot.actions import AddChanges, Clipboard, ExportTar, GitPassthrough
 from mydot.console import my_theme, rich_text
 
 
@@ -115,7 +115,7 @@ elif args.discard:
 elif args.restore:
     dotfiles.restore()
 elif args.export:
-    dotfiles.make_tar()
+    ExportTar(dotfiles).run()
 elif args.clip:
     Clipboard(dotfiles).run()
 elif len(extra_args) > 1 and extra_args[0] == "git":

@@ -8,7 +8,7 @@ To begin I'm pulling all of the actions out of the `Repository` class.
     - [X] Clip
     - [X] Git
     - [X] Add
-    - [ ] Export
+    - [X] Export
     - [ ] Edit
     - [ ] Run
     - [ ] Grep
@@ -17,10 +17,7 @@ To begin I'm pulling all of the actions out of the `Repository` class.
     - [ ] Status
     - [ ] List2
 
-
-
 ## Stage 2
-
 
 - [ ] Make a new Dotfile() class that is a file_path + powers
     - The idea is to use `Repository` to query subsets of the files under
