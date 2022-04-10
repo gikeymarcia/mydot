@@ -48,3 +48,5 @@ class GitPassthrough(Actions):
     def run(self):
         os.chdir(self.repo.run_from)
         subprocess.run(self.repo._git_base + self.cmd)
+
+# vim: foldlevel=1 :
