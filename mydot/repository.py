@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
-from sys import exit as sys_exit
+import sys
 from typing import List, Union
 
 import pydymenu
@@ -229,7 +229,7 @@ class Repository:
             preview=f"{self.preview_app}" + " {}",
         )
         if edits is None:
-            sys_exit("No selection made. Cancelling action.")
+            sys.exit("No selection made. Cancelling action.")
         else:
             if len(edits) == 1:
                 subprocess.run([self.editor, edits[0]])
@@ -248,7 +248,7 @@ class Repository:
                 preview=f"{self._git_str} diff --color --minimal --staged -- " + "{}",
             )
             if restores is None:
-                sys_exit("No selection made. No files will be unstaged.")
+                sys.exit("No selection made. No files will be unstaged.")
             else:
                 subprocess.run(
                     self._git_base + ["restore", "--staged", "--"] + restores
@@ -257,7 +257,7 @@ class Repository:
                 return restores
         else:
             self.show_status()
-            sys_exit("\nNo staged changes to restore.")
+            sys.exit("\nNo staged changes to restore.")
 
     def discard_changes(self) -> List[str]:
         """Discard changes from file(s) in the working directory."""
@@ -270,14 +270,14 @@ class Repository:
                 preview=f"{self._git_str} diff --color --minimal HEAD -- " + "{}",
             )
             if discards is None:
-                sys_exit("No selection made. No changes will be discarded.")
+                sys.exit("No selection made. No changes will be discarded.")
             else:
                 subprocess.run(self._git_base + ["restore", "--"] + discards)
                 self.freshen()
                 return discards
         else:
             self.show_status()
-            sys_exit("\nNo unstaged changes to discard.")
+            sys.exit("\nNo unstaged changes to discard.")
 
     # PROPERTIES
 
@@ -317,7 +317,7 @@ class Repository:
                 if bin := shutil.which(prog):
                     return bin
             else:
-                sys_exit("Cannot find a suitable editor, and boy did we look!")
+                sys.exit("Cannot find a suitable editor, and boy did we look!")
 
 
 # vim: foldlevel=1 :
