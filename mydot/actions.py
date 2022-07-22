@@ -128,5 +128,38 @@ class RunExecutable(Actions):
         else:
             return [str(selection)]
 
+class Grep(Actions):
+    def __init__(self, src_repo: Repository, regexp: str):
+        self.repo = src_repo
+        self.regexp = regexp
+
+    def run(self):
+        """Interactively choose dotfiles to open in text editor."""
+        # LATER make it work for multiple regex searches
+        proc = subprocess.run(
+            ["grep", "-I", "-l", self.regexp] + self.repo.list_all,
+            capture_output=True,
+            text=True,
+        )
+        hits = [h for h in proc.stdout.split("\n") if len(h) > 0]
+        if len(hits) == 0:
+            sys.exit("No matches for your regex search found in tracked dotfiles.")
+        choices = pydymenu.fzf(
+            hits,
+            prompt="Choose files to open: ",
+            multi=True,
+            preview=f"grep {self.regexp} -n --context=3 --color=always" + " {}",
+        )
+        # TODO: abstract these functions into an Opener(ABC/Protocol)
+        if choices is not None:
+            if len(choices) == 1:
+                subprocess.run([self.repo.editor, "-c", f"/{self.regexp}", choices[0]])
+            else:
+                subprocess.run([self.repo.editor, "-o", "-c", f"/{self.regexp}"] + choices)
+            self.repo.freshen()
+            return choices
+        else:
+            sys.exit("No selections made. Cancelling action.")
+
 
 # vim: foldlevel=1 :

@@ -238,34 +238,6 @@ class Repository:
             self.freshen()
             return edits
 
-    def grep(self, regex: str) -> List[str]:
-        """Interactively choose dotfiles to open in text editor."""
-        # LATER make it work for multiple regex searches
-        proc = subprocess.run(
-            ["grep", "-I", "-l", regex] + self.list_all,
-            capture_output=True,
-            text=True,
-        )
-        hits = [h for h in proc.stdout.split("\n") if len(h) > 0]
-        if len(hits) == 0:
-            sys_exit("No matches for your regex search found in tracked dotfiles.")
-        choices = pydymenu.fzf(
-            hits,
-            prompt="Choose files to open: ",
-            multi=True,
-            preview=f"grep {regex} -n --context=3 --color=always" + " {}",
-        )
-        # TODO: abstract these functions into an Opener(ABC/Protocol)
-        if choices is not None:
-            if len(choices) == 1:
-                subprocess.run([self.editor, "-c", f"/{regex}", choices[0]])
-            else:
-                subprocess.run([self.editor, "-o", "-c", f"/{regex}"] + choices)
-            self.freshen()
-            return choices
-        else:
-            sys_exit("No selections made. Cancelling action.")
-
     def restore(self) -> List[str]:
         """Interactively choose files to remove from the staging area."""
         if self.restorables:

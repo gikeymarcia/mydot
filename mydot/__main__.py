@@ -10,6 +10,7 @@ from mydot.actions import (
     Clipboard,
     ExportTar,
     GitPassthrough,
+    Grep,
     RunExecutable,
 )
 from mydot.console import my_theme, rich_text
@@ -113,7 +114,7 @@ elif args.status:
 elif args.list:
     [print(file) for file in dotfiles.list_all]
 elif args.grep:
-    dotfiles.grep(args.grep)
+    Grep(dotfiles, args.grep).run()
 elif args.run_executable:
     RunExecutable(dotfiles).run()
 elif args.discard:

@@ -9,8 +9,8 @@ To begin I'm pulling all of the actions out of the `Repository` class.
     - [X] Git
     - [X] Add
     - [X] Export
-    - [ ] Run
-    - [ ] Grep
+    - [X] Run
+    - [X] Grep
     - [ ] Restore
     - [ ] Discard
     - [ ] Status
