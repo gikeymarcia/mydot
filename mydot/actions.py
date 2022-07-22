@@ -6,6 +6,7 @@ from typing import List, Optional, Protocol
 import pydymenu
 
 from mydot.clip import Clipper, find_clipper
+from mydot.logging import logging
 from mydot.repository import Repository
 
 
@@ -94,6 +95,38 @@ class ExportTar(Actions):
             sep="\n",
         )
         return tarball
+
+
+class RunExecutable(Actions):
+    def __init__(self, src_repo: Repository):
+        self.repo = src_repo
+
+    def run(self) -> str:
+        """Interactively choose an executable to run. Optionally add arguements."""
+        exe = pydymenu.fzf(
+            self.repo.executables,
+            prompt="Pick a file to run: ",
+            multi=False,
+            preview=f"{self.repo.preview_app}" + " {}",
+        )
+        if exe is None:
+            sys.exit("No selection made. Cancelling action.")
+        else:
+            self.selection = exe[0]
+            logging.debug(f"{self.selection}")
+            os.chdir(self.repo.work_tree)
+            command = self.script_plus_args(self.selection)
+            subprocess.run(command)
+            return str(exe[0])
+
+    def script_plus_args(self, selection: str) -> List[str]:
+        """Optionally add arguements to a selected script."""
+        print("\nAdd script arguments, press ENTER to run\n")
+        script_args = input(f"{selection} ").strip()
+        if len(script_args) > 0:
+            return [str(selection)] + script_args.split()
+        else:
+            return [str(selection)]
 
 
 # vim: foldlevel=1 :

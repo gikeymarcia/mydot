@@ -9,13 +9,22 @@ To begin I'm pulling all of the actions out of the `Repository` class.
     - [X] Git
     - [X] Add
     - [X] Export
-    - [ ] Edit
     - [ ] Run
     - [ ] Grep
     - [ ] Restore
     - [ ] Discard
     - [ ] Status
     - [ ] List2
+    - [ ] Edit
+
+```python
+class ActionWithPreviewer:
+    def __init__(self, src_repo: Repository, previewer=None)
+    self.previewer: Previewer = previewer if previewer else None
+
+    def run(self, previewer=None):
+        pass
+```
 
 ## Stage 2
 

@@ -5,7 +5,13 @@
 import argparse
 
 from mydot import Repository
-from mydot.actions import AddChanges, Clipboard, ExportTar, GitPassthrough
+from mydot.actions import (
+    AddChanges,
+    Clipboard,
+    ExportTar,
+    GitPassthrough,
+    RunExecutable,
+)
 from mydot.console import my_theme, rich_text
 
 
@@ -109,7 +115,7 @@ elif args.list:
 elif args.grep:
     dotfiles.grep(args.grep)
 elif args.run_executable:
-    dotfiles.run_executable()
+    RunExecutable(dotfiles).run()
 elif args.discard:
     dotfiles.discard_changes()
 elif args.restore:

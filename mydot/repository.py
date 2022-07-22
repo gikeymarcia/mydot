@@ -10,14 +10,12 @@ from pathlib import Path
 import shutil
 import subprocess
 from sys import exit as sys_exit
-from typing import List, Optional, Union
+from typing import List, Union
 
 import pydymenu
 
-from mydot.clip import Clipper, find_clipper
 from mydot.console import console
 from mydot.exceptions import MissingRepositoryLocation, WorktreeMissing
-from mydot.system_funcs import script_plus_args
 
 
 # Custom Type
@@ -267,22 +265,6 @@ class Repository:
             return choices
         else:
             sys_exit("No selections made. Cancelling action.")
-
-    def run_executable(self) -> str:
-        """Interactively choose an executable to run. Optionally add arguements."""
-        exe = pydymenu.fzf(
-            self.executables,
-            prompt="Pick a file to run: ",
-            multi=False,
-            preview=f"{self.preview_app}" + " {}",
-        )
-        if exe is None:
-            sys_exit("No selection made. Cancelling action.")
-        else:
-            os.chdir(self.run_from)
-            command = script_plus_args(Path(self.work_tree) / exe[0])
-            subprocess.run(command)
-            return str(exe[0])
 
     def restore(self) -> List[str]:
         """Interactively choose files to remove from the staging area."""
