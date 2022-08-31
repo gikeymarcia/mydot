@@ -54,6 +54,13 @@ class Repository:
         self.run_from: Path = Path.cwd()
         os.chdir(self.work_tree)
 
+    def show_status(self) -> None:
+        """Short pretty formatted info about the repo state."""
+        console.print("Branches:", style="header")
+        subprocess.run(self._git_base + ["branch", "-a"])
+        console.print("\nModified Files:", style="header")
+        subprocess.run(self._git_base + ["status", "-s"])
+
     @staticmethod
     def _resolve_repo_location(path_loc: OptionalPath) -> Path:
         """Decides which dotfile repository location will be used.
@@ -211,13 +218,6 @@ class Repository:
     # | '_ \| '__/ _ \/ _` | |/ /
     # | |_) | | |  __/ (_| |   <
     # |_.__/|_|  \___|\__,_|_|\_\
-
-    def show_status(self) -> None:
-        """Short pretty formatted info about the repo state."""
-        console.print("Branches:", style="header")
-        subprocess.run(self._git_base + ["branch", "-a"])
-        console.print("\nModified Files:", style="header")
-        subprocess.run(self._git_base + ["status", "-s"])
 
     # ACTIONS
     def edit_files(self) -> List[str]:
