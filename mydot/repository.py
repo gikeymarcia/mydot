@@ -238,47 +238,6 @@ class Repository:
             self.freshen()
             return edits
 
-    def restore(self) -> List[str]:
-        """Interactively choose files to remove from the staging area."""
-        if self.restorables:
-            restores = pydymenu.fzf(
-                self.restorables,
-                prompt="Choose changes to remove from staging area: ",
-                multi=True,
-                preview=f"{self._git_str} diff --color --minimal --staged -- " + "{}",
-            )
-            if restores is None:
-                sys.exit("No selection made. No files will be unstaged.")
-            else:
-                subprocess.run(
-                    self._git_base + ["restore", "--staged", "--"] + restores
-                )
-                self.freshen()
-                return restores
-        else:
-            self.show_status()
-            sys.exit("\nNo staged changes to restore.")
-
-    def discard_changes(self) -> List[str]:
-        """Discard changes from file(s) in the working directory."""
-        unstaged = self.modified_unstaged
-        if unstaged:
-            discards = pydymenu.fzf(
-                unstaged,
-                prompt="Choose changes to discard: ",
-                multi=True,
-                preview=f"{self._git_str} diff --color --minimal HEAD -- " + "{}",
-            )
-            if discards is None:
-                sys.exit("No selection made. No changes will be discarded.")
-            else:
-                subprocess.run(self._git_base + ["restore", "--"] + discards)
-                self.freshen()
-                return discards
-        else:
-            self.show_status()
-            sys.exit("\nNo unstaged changes to discard.")
-
     # PROPERTIES
 
     @property

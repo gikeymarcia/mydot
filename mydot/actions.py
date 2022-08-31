@@ -128,6 +128,7 @@ class RunExecutable(Actions):
         else:
             return [str(selection)]
 
+
 class Grep(Actions):
     def __init__(self, src_repo: Repository, regexp: str):
         self.repo = src_repo
@@ -155,11 +156,69 @@ class Grep(Actions):
             if len(choices) == 1:
                 subprocess.run([self.repo.editor, "-c", f"/{self.regexp}", choices[0]])
             else:
-                subprocess.run([self.repo.editor, "-o", "-c", f"/{self.regexp}"] + choices)
+                subprocess.run(
+                    [self.repo.editor, "-o", "-c", f"/{self.regexp}"] + choices
+                )
             self.repo.freshen()
             return choices
         else:
             sys.exit("No selections made. Cancelling action.")
+
+
+class Restore(Actions):
+    def __init__(self, src_repo: Repository) -> None:
+        self.repo = src_repo
+        self.result: Optional[List[str]] = None
+
+    def run(self) -> None:
+        # Guard clause when nothing to restore
+        if self.repo.restorables is None:
+            self.repo.show_status()
+            sys.exit("\nNo staged changes to restore.")
+
+        restores = pydymenu.fzf(
+            self.repo.restorables,
+            prompt="Choose changes to REMOVE from the staging area: ",
+            multi=True,
+            preview=f"{self.repo._git_str} diff --color --minimal --staged -- " + "{}",
+        )
+        if restores:
+            subprocess.run(
+                self.repo._git_base + ["restore", "--staged", "--"] + restores
+            )
+            self.repo.freshen()
+            self.result = restores
+        else:
+            sys.exit("No selection made. No files will be unstaged.")
+
+
+class DiscardChanges(Actions):
+    def __init__(self, src_repo: Repository) -> None:
+        self.repo = src_repo
+        self.result: Optional[List[str]] = None
+
+    def run(self):
+        """Discard changes from file(s) in the working directory."""
+        unstaged = self.repo.modified_unstaged
+
+        # Guard clause for when there are no unstaged changes.
+        if unstaged is None:
+            self.repo.show_status()
+            sys.exit("\nNo unstaged changes to discard.")
+
+        discards = pydymenu.fzf(
+            unstaged,
+            prompt="Choose changes to discard: ",
+            multi=True,
+            preview=f"{self.repo._git_str} diff --color --minimal HEAD -- " + "{}",
+        )
+        # Guard clause when no selection is made
+        if discards is None:
+            sys.exit("No selection made. No changes will be discarded.")
+
+        subprocess.run(self.repo._git_base + ["restore", "--"] + discards)
+        self.repo.freshen()
+        self.result = discards
 
 
 # vim: foldlevel=1 :

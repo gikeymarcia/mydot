@@ -11,8 +11,8 @@ To begin I'm pulling all of the actions out of the `Repository` class.
     - [X] Export
     - [X] Run
     - [X] Grep
-    - [ ] Restore
-    - [ ] Discard
+    - [X] Restore
+    - [X] Discard
     - [ ] Status
     - [ ] List2
     - [ ] Edit

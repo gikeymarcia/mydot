@@ -8,9 +8,11 @@ from mydot import Repository
 from mydot.actions import (
     AddChanges,
     Clipboard,
+    DiscardChanges,
     ExportTar,
     GitPassthrough,
     Grep,
+    Restore,
     RunExecutable,
 )
 from mydot.console import my_theme, rich_text
@@ -118,9 +120,9 @@ elif args.grep:
 elif args.run_executable:
     RunExecutable(dotfiles).run()
 elif args.discard:
-    dotfiles.discard_changes()
+    DiscardChanges(dotfiles).run()
 elif args.restore:
-    dotfiles.restore()
+    Restore(dotfiles).run()
 elif args.export:
     ExportTar(dotfiles).run()
 elif args.clip:
