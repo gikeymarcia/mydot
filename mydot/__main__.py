@@ -14,7 +14,7 @@ from mydot.actions import (
     Grep,
     Restore,
     RunExecutable,
-    EditFiles
+    EditFiles,
 )
 from mydot.console import my_theme, rich_text
 

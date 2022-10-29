@@ -47,7 +47,7 @@ class Clipboard(Actions):
         self.repo = repo
         self.clipper = find_clipper() if clipper is None else clipper
 
-    def run(self):
+    def run(self) -> List[str]:
         # TODO: repo.preview_app is a weird hack, change later
         clips = pydymenu.fzf(
             self.repo.list_all,
