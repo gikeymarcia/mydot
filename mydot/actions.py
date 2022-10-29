@@ -21,6 +21,7 @@ class EditFiles(Actions):
     def __init__(self, src_repo: Repository, editor: Optional[Editor] = None) -> None:
         self.repo: Repository = src_repo
         self.editor: Editor = find_editor() if editor is None else editor
+        logging.debug(f"Editing a file __init__ object complete.")
 
     def run(self) -> List[Path]:
         edit_queue = pydymenu.fzf(
@@ -29,12 +30,12 @@ class EditFiles(Actions):
             multi=True,
             preview=f"{self.repo.preview_app}" + " {}",
         )
-        logging.debug(edit_queue)
+        logging.debug(f"return of edit file selector: {edit_queue}")
         if edit_queue is None:
             sys.exit("No selection made. Cancelling action.")
         else:
             absolute_paths = [Path(sel).absolute() for sel in edit_queue]
-            logging.debug(absolute_paths)
+            logging.debug(f"absolute paths passed to {self.editor}:\n{absolute_paths}")
             self.editor.open(absolute_paths)
             self.repo.freshen()
             return absolute_paths
@@ -138,7 +139,7 @@ class RunExecutable(Actions):
             sys.exit("No selection made. Cancelling action.")
         else:
             self.selection = exe[0]
-            logging.debug(f"{self.selection}")
+            logging.debug(f"Executable file choosen: {self.selection}")
             os.chdir(self.repo.work_tree)
             command = self.script_plus_args(self.selection)
             subprocess.run(command)
@@ -178,6 +179,7 @@ class Grep(Actions):
         )
         if choices is not None:
             editor = find_editor()
+            logging.debug(f"Grep.run() search term: {self.regexp}")
             editor.open([Path(file).absolute() for file in choices], search=self.regexp)
             self.repo.freshen()
             return choices

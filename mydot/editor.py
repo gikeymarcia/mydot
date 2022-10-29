@@ -7,6 +7,7 @@ import shutil
 import subprocess
 from pathlib import Path
 from typing import List, Protocol, Optional
+from mydot.logging import logging
 
 
 class Editor(Protocol):
@@ -21,14 +22,41 @@ class Editor(Protocol):
         raise NotImplementedError
 
 
+class UserDefinedEditor(Editor):
+    """
+    Editor class which takes a binary name and tries to use it as the command
+    to open a file with. Does not support search paramters and assumes structure:
+        `command-name file1 file2 file3 ...`
+    """
+    def __init__(self, binary_name: str):
+        self.program = binary_name
+
+    def open(self, files: List[Path], search: Optional[str] = None):
+        logging.debug(f"UserDefinedEditor:")
+        if search:
+            pass
+        if shutil.which(self.program):
+            print(f"Reading EDITOR={self.program} from environment")
+            subprocess.run([self.program] + files)
+        else:
+            print(f"Could not find program: {self.program}")
+            print("Selections made:\n")
+            for f in files:
+                print(f"\t{f}")
+
+
 class MissingEditor(Editor):
     program = "missing"
 
     def open(self, files: List[Path], search: Optional[str] = None):
-        if search:
+        logging.debug("entered MissingEditor.open()")
+        if search is None:
+            pass
+        else:
+            logging.debug(f"Missing editor search term: {search}")
             for file in files:
                 subprocess.run(
-                    ["grep", "--context=5", "--color=auto", "--line-number", file]
+                    ["grep", "--context=5","--color=auto", "--with-filename","--line-number", search, file]
                 )
         print("\n\nNo suitable editor found on the system, and boy did we look!\n")
         print("Files selected:\n")
@@ -57,9 +85,9 @@ class Neovim(Editor):
         if search:
             base_cmd = base_cmd + ["-c", f"/{search}"]
         if count == 1:
-            subprocess.run(base_cmd + [files[0]])
+            subprocess.run(base_cmd + files)
         elif count > 1:
-            subprocess.run(base_cmd + ["-o"] + files)
+            subprocess.run(base_cmd + ["-O"] + files)
 
 
 class Vim(Editor):
@@ -73,32 +101,38 @@ class Vim(Editor):
         if count == 1:
             subprocess.run(base_cmd + [files[0]])
         elif count > 1:
-            subprocess.run(base_cmd + ["-o"] + files)
+            subprocess.run(base_cmd + ["-O"] + files)
 
 
 def find_editor() -> Editor:
     """
     Find a suitable text editor and return as an Editor object.
     """
+    logging.debug("find_editor() begins")
     opts = {
         "nvim": Neovim(),
         "vim": Vim(),
         "nano": Nano(),
     }
     env = os.getenv("EDITOR", None)
+    logging.debug(f"env EDITOR={env}")
     if env:
         if env in opts:
             return opts[env]
         else:
-            return MissingEditor
-    if env in opts:
-        return opts[env]
-    else:
-        for ed in ["nvim", "vim", "nano"]:
-            if shutil.which(ed):
+            return UserDefinedEditor(env)
+    editors_to_try = ["nvim", "vim", "nano", 'kate', 'gedit']
+    logging.debug(f"Searching for viable editors: {editors_to_try}")
+    for ed in editors_to_try:
+        if shutil.which(ed):
+            logging.debug(f"Found editor in $PATH: {ed}")
+            if ed in opts:
                 return opts[ed]
-        else:
-            return MissingEditor()
+            else:
+                return UserDefinedEditor(ed)
+    else:
+        logging.debug(f"Failed to find any of: {editors_to_try}")
+        return MissingEditor()
 
 
 # vim: foldlevel=0:

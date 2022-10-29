@@ -7,6 +7,7 @@ import logging
 # the way logs are being used
 
 log_format = "%(asctime)s -%(levelname)s- %(message)s"
+log_level = logging.DEBUG
 log_level = logging.INFO
 log_filename = "app.log"
 

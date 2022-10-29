@@ -6,3 +6,4 @@ env/
 mydot.egg-info/
 .git/
 Session.vim
+app.log
