@@ -14,6 +14,7 @@ from mydot.actions import (
     Grep,
     Restore,
     RunExecutable,
+    EditFiles
 )
 from mydot.console import my_theme, rich_text
 
@@ -107,8 +108,7 @@ dotfiles = Repository()
 
 
 if args.edit:
-    # TODO: throw error when DOTFILES is not defined
-    dotfiles.edit_files()
+    EditFiles(dotfiles).run()
 elif args.add:
     AddChanges(dotfiles).run()
 elif args.status:

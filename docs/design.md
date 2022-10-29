@@ -13,9 +13,10 @@ To begin I'm pulling all of the actions out of the `Repository` class.
     - [X] Grep
     - [X] Restore
     - [X] Discard
-    - [ ] List2
-    - [ ] Edit
-    - [ ] ~~Status~~ _keeping this in `Repository`_
+    - [X] Edit
+
+- Next Steps
+    - [ ] List2 --> Selector?
 
 ```python
 class ActionWithPreviewer:

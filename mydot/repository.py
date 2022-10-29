@@ -9,10 +9,8 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
-import sys
 from typing import List, Union
 
-import pydymenu
 
 from mydot.console import console
 from mydot.exceptions import MissingRepositoryLocation, WorktreeMissing
@@ -23,16 +21,19 @@ OptionalPath = Union[Path, str, None]
 
 
 class Repository:
-    """Power up control of your dotfiles with fzf and python."""
+    """
+    Gets git-context aware slices of data from your repository.
 
-    #
-    #      _
-    #  ___| |_ __ _ _   _
-    # / __| __/ _` | | | |
-    # \__ \ || (_| | |_| |
-    # |___/\__\__,_|\__, |
-    #               |___/
-    # All of these functions are staying
+    Useful Methods
+    .show_status() general purpose report of repository state
+    .freshen() drop cached results. New data will be polled at next execution.
+
+    Useful PROPERTIES
+    .tracked -- list of files already committed in repo
+    .list_all -- list of committed and staged files
+    .restorables --
+    """
+
     def __init__(
         self,
         local_bare_repo: OptionalPath = None,
@@ -213,32 +214,15 @@ class Repository:
             pass
 
     # All of these functions are breaking from the 'Repository'
-    #  _                    _
-    # | |__  _ __ ___  __ _| | __
-    # | '_ \| '__/ _ \/ _` | |/ /
-    # | |_) | | |  __/ (_| |   <
-    # |_.__/|_|  \___|\__,_|_|\_\
-
-    # ACTIONS
-    def edit_files(self) -> List[str]:
-        """Interactively choose dotfiles to open in text editor."""
-        edits = pydymenu.fzf(
-            self.list_all,
-            prompt="Pick file(s) to edit: ",
-            multi=True,
-            preview=f"{self.preview_app}" + " {}",
-        )
-        if edits is None:
-            sys.exit("No selection made. Cancelling action.")
-        else:
-            if len(edits) == 1:
-                subprocess.run([self.editor, edits[0]])
-            else:
-                subprocess.run([self.editor, "-o"] + edits)
-            self.freshen()
-            return edits
-
-    # PROPERTIES
+    # But I don't yet know how... TODO
+    #      __     _
+    #     / _|   | |     ___   __ __ __
+    #    |  _|   | |    / _ \  \ V  V /
+    #   _|_|_   _|_|_   \___/   \_/\_/
+    # _|"""""|_|"""""|_|"""""|_|"""""|
+    # "`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'
+    # How do these objects interact?
+    # Which models of action bring relevance and agency?
 
     @property
     def list_all_as_path(self) -> List[Path]:
@@ -265,18 +249,5 @@ class Repository:
             return "highlight -O ansi"
         else:
             return "cat"
-
-    @cached_property
-    def editor(self) -> str:
-        """Preference: $EDITOR > nvim > vim > nano > emacs."""
-        if env := os.getenv("EDITOR", None):
-            return env
-        else:
-            for prog in ["nvim", "vim", "nano", "emacs"]:
-                if bin := shutil.which(prog):
-                    return bin
-            else:
-                sys.exit("Cannot find a suitable editor, and boy did we look!")
-
 
 # vim: foldlevel=1 :

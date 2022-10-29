@@ -2,10 +2,12 @@ import os
 import subprocess
 import sys
 from typing import List, Optional, Protocol
+from pathlib import Path
 
 import pydymenu
 
 from mydot.clip import Clipper, find_clipper
+from mydot.editor import Editor, find_editor
 from mydot.logging import logging
 from mydot.repository import Repository
 
@@ -13,6 +15,29 @@ from mydot.repository import Repository
 class Actions(Protocol):
     def run(self):
         raise NotImplementedError
+
+
+class EditFiles(Actions):
+    def __init__(self, src_repo: Repository, editor: Optional[Editor] = None) -> None:
+        self.repo: Repository = src_repo
+        self.editor: Editor = find_editor() if editor is None else editor
+
+    def run(self) -> List[Path]:
+        edit_queue = pydymenu.fzf(
+            self.repo.list_all,
+            prompt="Pick file(s) to edit: ",
+            multi=True,
+            preview=f"{self.repo.preview_app}" + " {}",
+        )
+        logging.debug(edit_queue)
+        if edit_queue is None:
+            sys.exit("No selection made. Cancelling action.")
+        else:
+            absolute_paths = [Path(sel).absolute() for sel in edit_queue]
+            logging.debug(absolute_paths)
+            self.editor.open(absolute_paths)
+            self.repo.freshen()
+            return absolute_paths
 
 
 class Clipboard(Actions):
@@ -151,14 +176,9 @@ class Grep(Actions):
             multi=True,
             preview=f"grep {self.regexp} -n --context=3 --color=always" + " {}",
         )
-        # TODO: abstract these functions into an Opener(ABC/Protocol)
         if choices is not None:
-            if len(choices) == 1:
-                subprocess.run([self.repo.editor, "-c", f"/{self.regexp}", choices[0]])
-            else:
-                subprocess.run(
-                    [self.repo.editor, "-o", "-c", f"/{self.regexp}"] + choices
-                )
+            editor = find_editor()
+            editor.open([Path(file).absolute() for file in choices], search=self.regexp)
             self.repo.freshen()
             return choices
         else:
