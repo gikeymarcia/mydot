@@ -4,17 +4,6 @@
 
 To begin I'm pulling all of the actions out of the `Repository` class.
 
-- My Dot Actions
-    - [X] Clip
-    - [X] Git
-    - [X] Add
-    - [X] Export
-    - [X] Run
-    - [X] Grep
-    - [X] Restore
-    - [X] Discard
-    - [X] Edit
-
 - Next Steps
     - [ ] List2 --> Selector?
 

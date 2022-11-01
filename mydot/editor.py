@@ -28,6 +28,7 @@ class UserDefinedEditor(Editor):
     to open a file with. Does not support search paramters and assumes structure:
         `command-name file1 file2 file3 ...`
     """
+
     def __init__(self, binary_name: str):
         self.program = binary_name
 
@@ -56,7 +57,15 @@ class MissingEditor(Editor):
             logging.debug(f"Missing editor search term: {search}")
             for file in files:
                 subprocess.run(
-                    ["grep", "--context=5","--color=auto", "--with-filename","--line-number", search, file]
+                    [
+                        "grep",
+                        "--context=5",
+                        "--color=auto",
+                        "--with-filename",
+                        "--line-number",
+                        search,
+                        file,
+                    ]
                 )
         print("\n\nNo suitable editor found on the system, and boy did we look!\n")
         print("Files selected:\n")
@@ -121,7 +130,7 @@ def find_editor() -> Editor:
             return opts[env]
         else:
             return UserDefinedEditor(env)
-    editors_to_try = ["nvim", "vim", "nano", 'kate', 'gedit']
+    editors_to_try = ["nvim", "vim", "nano", "kate", "gedit"]
     logging.debug(f"Searching for viable editors: {editors_to_try}")
     for ed in editors_to_try:
         if shutil.which(ed):
