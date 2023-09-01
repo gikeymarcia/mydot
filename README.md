@@ -7,60 +7,65 @@ ease.
 
 ## Quick Start
 
-1. **Configure shell:** At the bottom of your `~/.bashrc` add:
+1. **Install dependencies:**
+
+    ```bash
+    sudo apt install fzf git    # Ubuntu/Debian
+    brew install fzf git        # MacOS/Homebrew
+    ```
+1. **Configure shell:** At the bottom of your `~/.bashrc` or `~/.zshhrc` add:
 
     ```bash
     export DOTFILES="$HOME/.config/dotfiles"
-    alias d.="python -m mydot"
+    alias config='/usr/bin/git --git-dir=$DOTFILES --work-tree=$HOME'
     ```
 
     _what and why?_:
 
     - `DOTFILES`: variable pointing to your local `--bare` dotfiles repository
-    - `d.` alias to invoke `mydot`'s command line interface
 
-2. **Initialize dotfiles repository:** First open a new shell or `source
-   ~/.bashrc` then:
+2. **Initialize dotfiles repository:** Reload shell config with `source ~/.bashrc` 
+    or `source ~/.zshhrc` then:
 
     ```bash
     mkdir -pv $DOTFILES         # create directory
     git init --bare $DOTFILES   # initialize the repository
     ```
 
-3. **Install** `mydot`, `fzf`, and disable viewing of untracked files
+3. **Install** `mydot` and disable viewing of untracked files
 
     ```bash
     pip install --user mydot
-    sudo apt install fzf -y
-    d. git config --local status.showUntrackedFiles no
+    mydot git config --local status.showUntrackedFiles no
     ```
 
 3. **Add files** to your dotfiles repo
 
     ```bash
-    d. git add ~/.vimrc ~/.tmux.conf ~/.bashrc ~/.bash_aliases
-    d. git commit -m "the journey of a thousand miles begins with one step"
+    mydot git add ~/.vimrc ~/.tmux.conf ~/.bashrc ~/.bash_aliases ~/.zshrc
+    mydot git commit -m "the journey of a thousand miles begins with one step"
     ```
 
     _protip:_ You can use all your regular git commands, including aliases, when
     calling `d. git`
 
-4. **Feel the power** with `mydot`
+4. **Feel the power** with `mydot` (and the pre-installed alias `d.`)
 
     ```bash
-    d. --edit   # choose file(s) to open in $EDITOR
-    d. --add    # add changed file(s) to staging area
-    d. --run    # select an executable file to run
-    d. --grep   # grep through tracked dotfiles and pick from matches
-    d. --restore # remove files from staging area
-    d. --discard # discard unstaged changes from work tree
+    d. -e       # choose file(s) to open in $EDITOR
+    d. -a       # choose modified files to add file(s) to staging area
+    d. -r       # select an executable file to run
+    d. -g       # grep through tracked dotfiles and open from matches
+    d. -s       # see the state of your repo
+    d. -l       # list all files under version control
 
-    d. --export # make a tarball of your dotfiles + bare git repo
-    d. --clip   # put file paths into the clipboard
-    d. --status # see the state of your repo
-    d. --ls     # list all files under version control
+    d. --export     # make a tarball of your dotfiles + bare git repo
+    d. --clip       # put file paths into the clipboard
 
-    d. --help   # see more details about available commands
+    d. --restore    # remove files from staging area
+    d. --discard    # discard unstaged changes from work tree
+
+    d.          # see the help message whihc details available commands
     ```
 
 ## Going Deeper
@@ -68,21 +73,13 @@ ease.
 ### Useful aliases
 
 ```bash
-alias es="python -m mydot --edit" # quick select a file to edit
-alias rs="python -m mydot --run" # quick select a script to run
+alias es="mydot --edit"     # quick select a file to edit
+alias rs="mydot --run"      # quick select a script to run
 ```
 
-## Development
-
-To get started with development:
-
-- clone the repository
-- install development dependencies
-- `source ./tools.sh`
-
-See my [Super Python Project Template][template] on GitHub to learn more about
-the automated features of this development environment. Clone the repo to get
-your own Python projects up and running quickly!
+If you ever run into an issue where the `mydot` CLI is reading flags meant for 
+`mydot git` you can fallback to the `config` alias from step 1 which acts as a 
+special git command that only applies for the dotfiles repo.
 
 ### Source of Truth
 

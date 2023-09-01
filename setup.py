@@ -17,4 +17,10 @@ setup(
     license="GPL-3.0",
     packages=find_packages(exclude="tests"),
     install_requires=["pydymenu>=0.5.0", "rich"],
+    entry_points={
+        'console_scripts': [
+            'mydot = mydot.__main__:main',
+            'd. = mydot.__main__:main',
+        ],
+    },
 )
