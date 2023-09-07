@@ -23,19 +23,24 @@ ease.
     _what and why?_:
 
     - `DOTFILES`: variable pointing to your local `--bare` dotfiles repository
+    - `config`: git alias to directly address the `--bare` dotfiles repository
 
-2. **Initialize dotfiles repository:** Reload shell config with `source ~/.bashrc` 
-    or `source ~/.zshhrc` then:
+2. **Initialize dotfiles repository:**
 
     ```bash
+    # reload shell configu
+    source ~/.bashrc            # if using bash
+    source ~/.zshrcc            # if using zsh
+
     mkdir -pv $DOTFILES         # create directory
-    git init --bare $DOTFILES   # initialize the repository
+    git init --bare $DOTFILES   # initialize --bare git repository
     ```
 
 3. **Install** `mydot` and disable viewing of untracked files
 
     ```bash
-    pip install --user mydot
+    pip install --user mydot    # if using pip
+    pipx install mydot          # if using pipx
     mydot git config --local status.showUntrackedFiles no
     ```
 
@@ -47,17 +52,21 @@ ease.
     ```
 
     _protip:_ You can use all your regular git commands, including aliases, when
-    calling `d. git`
+    calling `mydot git`
 
 4. **Feel the power** with `mydot` (and the pre-installed alias `d.`)
 
     ```bash
-    d. -e       # choose file(s) to open in $EDITOR
-    d. -a       # choose modified files to add file(s) to staging area
-    d. -r       # select an executable file to run
-    d. -g       # grep through tracked dotfiles and open from matches
-    d. -s       # see the state of your repo
-    d. -l       # list all files under version control
+    d. -e           # modify tracked files in your $EDITOR (tab in fzf for multiselect)
+    d. -a           # choose which modified files to stage for commit
+    d. git commit   # commit changes
+
+    d. -g "EDITOR"  # find all files with lines containing the string EDITOR
+                    # works with regex too! e.g, EDITOR$ something.*var ^$
+
+    d. -r           # run any executable script in your dotfiles repo
+    d. -s           # see the state of your repo
+    d. -l           # list all files under version control
 
     d. --export     # make a tarball of your dotfiles + bare git repo
     d. --clip       # put file paths into the clipboard
@@ -65,7 +74,7 @@ ease.
     d. --restore    # remove files from staging area
     d. --discard    # discard unstaged changes from work tree
 
-    d.          # see the help message whihc details available commands
+    d.              # see the help message detailing available commands
     ```
 
 ## Going Deeper
@@ -80,6 +89,10 @@ alias rs="mydot --run"      # quick select a script to run
 If you ever run into an issue where the `mydot` CLI is reading flags meant for 
 `mydot git` you can fallback to the `config` alias from step 1 which acts as a 
 special git command that only applies for the dotfiles repo.
+
+For example `mydot git rm -r ~/.tmux` would see the `-r` flag and try to run an
+executable in your dotfiles. Instead use `config rm -r ~/.tmux` and the files
+in the directory will be removed recursively.
 
 ### Source of Truth
 
