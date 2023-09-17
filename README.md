@@ -13,7 +13,7 @@ ease.
     sudo apt install fzf git    # Ubuntu/Debian
     brew install fzf git        # MacOS/Homebrew
     ```
-1. **Configure shell:** At the bottom of your `~/.bashrc` or `~/.zshhrc` add:
+1. **Configure shell:** At the bottom of your `~/.bashrc` or `~/.zshrc` add:
 
     ```bash
     export DOTFILES="$HOME/.config/dotfiles"
@@ -30,7 +30,7 @@ ease.
     ```bash
     # reload shell configu
     source ~/.bashrc            # if using bash
-    source ~/.zshrcc            # if using zsh
+    source ~/.zshrc             # if using zsh
 
     mkdir -pv $DOTFILES         # create directory
     git init --bare $DOTFILES   # initialize --bare git repository
