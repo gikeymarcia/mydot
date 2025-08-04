@@ -46,7 +46,7 @@ def main():
     subparsers.add_parser("edit", help="Interactively choose file(s) to edit")
     subparsers.add_parser("add", help="Interactively stage changes")
     subparsers.add_parser("status", help="Show repo status")
-    subparsers.add_parser("list", help="List all tracked dotfiles")
+    subparsers.add_parser("ls", help="List all tracked dotfiles")
 
     grep_parser = subparsers.add_parser("grep", help="Search repo with regex")
     grep_parser.add_argument("pattern", type=str)
@@ -71,7 +71,7 @@ def main():
             AddChanges(dotfiles).run()
         case "status":
             dotfiles.show_status()
-        case "list":
+        case "ls":
             for file in dotfiles.list_all:
                 print(file)
         case "grep":
@@ -91,18 +91,6 @@ def main():
             GitPassthrough(dotfiles, sys.argv[2:]).run()
         case _:
             parser.print_help()
-
-    # TODO add:
-    #  history:
-    #  $(git log --oneline -- bootstrap.yml | awk '{print $1'} | fzf --preview="git show {}:bootstrap.yml"')
-    #  flow: d. --history
-    #    1. pick file
-    #    2. get list of hashes
-    #    3. fzf picker with preview of each version
-    #    4. Upon selection open file in split view with current version
-    #  fzf:
-    #    fzf selector meant to send through a pipeline
-
 
 if __name__ == "__main__":
     main()
