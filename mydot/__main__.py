@@ -3,6 +3,8 @@
 # https://github.com/gikeymarcia/mydot
 
 import argparse
+import sys
+from mydot.logging import logging
 
 from mydot import Repository
 from mydot.actions import (
@@ -39,100 +41,70 @@ def main():
         description=rich_str["desc"],
         epilog=rich_str["epilog"],
     )
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "-e",
-        "--edit",
-        help="Use fzf to interactively choose file(s) to open in your $EDITOR",
-        action="store_true",
-    )
-    group.add_argument(
-        "-a",
-        "--add",
-        help="Use fzf to interactively stage changes to your dofiles",
-        action="store_true",
-    )
-    group.add_argument(
-        "-r",
-        "--run",
-        help="Interactively choose an excutable file/script to run.",
-        action="store_true",
-        dest="run_executable",
-    )
-    group.add_argument(
-        "-g",
-        "--grep",
-        help="regex search over each non-binary file in the repo. Select from hits.",
-        type=str,
-    )
-    group.add_argument(
-        "--restore",
-        help="Use fzf to interactively choose file(s) to remove from the staging area.",
-        action="store_true",
-    )
-    group.add_argument(
-        "--discard",
-        help="Revert unstaged file(s) back to their state at the last commit.",
-        action="store_true",
-    )
-    group.add_argument(
-        "--clip",
-        help="Put absolute file path(s) into the clipboard.",
-        action="store_true",
-    )
-    group.add_argument(
-        "--export",
-        help="Make a tarball of tracked dotfiles @ work-tree/dotfiles.tar.gz",
-        action="store_true",
-    )
-    group.add_argument(
-        "-s",
-        "--status",
-        help="Show status of dotfiles repo",
-        action="store_true",
-    )
-    group.add_argument(
-        "-l",
-        "--list",
-        help="List all dotfiles in the work tree",
-        action="store_true",
-    )
-    args, extra_args = parser.parse_known_args()
+    subparsers = parser.add_subparsers(dest="command")
+
+    subparsers.add_parser("edit", help="Interactively choose file(s) to edit")
+    subparsers.add_parser("add", help="Interactively stage changes")
+    subparsers.add_parser("status", help="Show repo status")
+    subparsers.add_parser("list", help="List all tracked dotfiles")
+
+    grep_parser = subparsers.add_parser("grep", help="Search repo with regex")
+    grep_parser.add_argument("pattern", type=str)
+
+    subparsers.add_parser("run", help="Run a tracked executable")
+    subparsers.add_parser("discard", help="Revert unstaged file(s)")
+    subparsers.add_parser("restore", help="Unstage file(s)")
+    subparsers.add_parser("export", help="Tarball of all tracked files")
+    subparsers.add_parser("clip", help="Copy absolute paths to clipboard")
+
+    git_parser = subparsers.add_parser("git", help="Pass commands to git")
+    git_parser.add_argument("args", nargs=argparse.REMAINDER)
+
+    args, unknown_args = parser.parse_known_args()
     dotfiles = Repository()
-    # TODO add --history
-    # $(git log --oneline -- bootstrap.yml | awk '{print $1'} | fzf --preview="git show {}:bootstrap.yml"')
-    # flow: d. --history
-    #   1. pick file
-    #   2. get list of hashes
-    #   3. fzf picker with preview of each version
-    #   4. Upon selection open file in split view with current version
+    logging.debug(f"{sys.argv=}")
 
+    match args.command:
+        case "edit":
+            EditFiles(dotfiles).run()
+        case "add":
+            AddChanges(dotfiles).run()
+        case "status":
+            dotfiles.show_status()
+        case "list":
+            for file in dotfiles.list_all:
+                print(file)
+        case "grep":
+            Grep(dotfiles, sys.argv[2:]).run()
+        case "run":
+            RunExecutable(dotfiles).run()
+        case "discard":
+            DiscardChanges(dotfiles).run()
+        case "restore":
+            Restore(dotfiles).run()
+        case "export":
+            ExportTar(dotfiles).run()
+        case "clip":
+            Clipboard(dotfiles).run()
+        case "git":
+            logging.info(f'git command: {sys.argv[2:]}')
+            GitPassthrough(dotfiles, sys.argv[2:]).run()
+        case _:
+            parser.print_help()
 
-    if args.edit:
-        EditFiles(dotfiles).run()
-    elif args.add:
-        AddChanges(dotfiles).run()
-    elif args.status:
-        dotfiles.show_status()
-    elif args.list:
-        [print(file) for file in dotfiles.list_all]
-    elif args.grep:
-        Grep(dotfiles, args.grep).run()
-    elif args.run_executable:
-        RunExecutable(dotfiles).run()
-    elif args.discard:
-        DiscardChanges(dotfiles).run()
-    elif args.restore:
-        Restore(dotfiles).run()
-    elif args.export:
-        ExportTar(dotfiles).run()
-    elif args.clip:
-        Clipboard(dotfiles).run()
-    elif len(extra_args) > 1 and extra_args[0] == "git":
-        GitPassthrough(dotfiles, extra_args[1:]).run()
-    else:
-        parser.parse_args(["-h"])
+    # TODO add:
+    #  history:
+    #  $(git log --oneline -- bootstrap.yml | awk '{print $1'} | fzf --preview="git show {}:bootstrap.yml"')
+    #  flow: d. --history
+    #    1. pick file
+    #    2. get list of hashes
+    #    3. fzf picker with preview of each version
+    #    4. Upon selection open file in split view with current version
+    #  fzf:
+    #    fzf selector meant to send through a pipeline
+
 
 if __name__ == "__main__":
     main()
+
 # vim: foldlevel=0:

@@ -156,15 +156,29 @@ class RunExecutable(Actions):
 
 
 class Grep(Actions):
-    def __init__(self, src_repo: Repository, regexp: str):
+    def __init__(self, src_repo: Repository, regexp: list[str]):
         self.repo = src_repo
         self.regexp = regexp
+        self.joined = self.join_args(regexp)
+        logging.debug(f"Making Grep Object: {repr(self)}")
+
+    def __repr__(self):
+        return f"\nrepo: {self.repo.bare_repo}\nregexp: {self.regexp}\njoined: {self.joined}"
+
+    def join_args(self, regexp: list[str]) -> str:
+        out = ""
+        for item in regexp:
+            if '|' in item:
+                out = out + f" '{item}'"
+            else:
+                out = out + f' {item}'
+        return out
 
     def run(self):
         """Interactively choose dotfiles to open in text editor."""
         # LATER make it work for multiple regex searches
         proc = subprocess.run(
-            ["grep", "-I", "-l", self.regexp] + self.repo.list_all,
+            ["grep", "-I", "-l"] + self.regexp + self.repo.list_all,
             capture_output=True,
             text=True,
         )
@@ -175,7 +189,7 @@ class Grep(Actions):
             hits,
             prompt="Choose files to open: ",
             multi=True,
-            preview=f"grep {self.regexp} -n --context=3 --color=always" + " {}",
+            preview=f"grep {self.joined} -n --context=3 --color=always" + " {}",
         )
         if choices is not None:
             editor = find_editor()

@@ -28,9 +28,9 @@ function _enter_venv() {
 }
 
 function _install_requirements() {
-    python -m pip install --upgrade pip
-    python -m pip install -r ./requirements_dev.txt
-    python -m pip list
+    python3 -m pip install --upgrade pip
+    python3 -m pip install -r ./requirements_dev.txt
+    python3 -m pip list
 }
 
 function enter_the_dojo(){
@@ -61,7 +61,7 @@ function _build_project () {
     _clean_environment "$2"
     # remove old builds
     rm -rv "${1}/build" && rm -rv "${1}/dist"
-    python ./setup.py sdist bdist_wheel     # build source archive and wheel
+    python3 ./setup.py sdist bdist_wheel     # build source archive and wheel
     tar tzf dist/*tar.gz                    # display tar contents
     twine check dist/*                      # check render on PyPi
 
@@ -79,9 +79,9 @@ function _build_project () {
 function _continuous_testing() {
     # TODO check for the apps and install if needed
     _print_banner "Test Driven Development!"
-    python -m pytest -v "$1"
+    python3 -m pytest -v "$1"
     while true; do
-        fdfind -e py | entr -rndp python -m pytest -v "$1"
+        find . -name "*.py" | entr -rndp python3 -m pytest -v "$1"
         sleep 0.5
     done
 }
