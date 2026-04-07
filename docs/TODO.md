@@ -2,7 +2,8 @@
 
 ### Chores / Catch Up
 
-- [ ] Migrate from bump2version to [bump-my-version](https://github.com/callowayproject/bump-my-version)
+- [x] Migrate from bump2version to [bump-my-version](https://github.com/callowayproject/bump-my-version)
+- [x] Replace tools.sh with scripts/ directory
 
 ### Features
 
