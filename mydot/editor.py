@@ -34,8 +34,6 @@ class UserDefinedEditor(Editor):
 
     def open(self, files: List[Path], search: Optional[str] = None):
         logging.debug(f"UserDefinedEditor:")
-        if search:
-            pass
         if shutil.which(self.program):
             print(f"Reading EDITOR={self.program} from environment")
             subprocess.run([self.program] + files)
@@ -51,9 +49,7 @@ class MissingEditor(Editor):
 
     def open(self, files: List[Path], search: Optional[str] = None):
         logging.debug("entered MissingEditor.open()")
-        if search is None:
-            pass
-        else:
+        if search is not None:
             logging.debug(f"Missing editor search term: {search}")
             for file in files:
                 subprocess.run(
