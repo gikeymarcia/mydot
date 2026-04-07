@@ -208,7 +208,7 @@ class Restore(Actions):
 
     def run(self) -> None:
         # Guard clause when nothing to restore
-        if self.repo.restorables is None:
+        if not self.repo.restorables:
             self.repo.show_status()
             sys.exit("\nNo staged changes to restore.")
 
@@ -238,7 +238,7 @@ class DiscardChanges(Actions):
         unstaged = self.repo.modified_unstaged
 
         # Guard clause for when there are no unstaged changes.
-        if unstaged is None:
+        if not unstaged:
             self.repo.show_status()
             sys.exit("\nNo unstaged changes to discard.")
 
