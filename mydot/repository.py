@@ -190,28 +190,9 @@ class Repository:
 
     # Cache
     def freshen(self) -> None:
-        """Deltes @cached_property values which forces recompute on next use.
-
-        Very useful for programs building upon Dotfiles. Allows you to take actions,
-        utilize @cached_property values during runtime but request caches be dropped
-        so further runs will request new data from `git`
-        """
-        try:
-            del self.short_status
-        except AttributeError:
-            pass  # ignore failure to delete uncached functions
-        try:
-            del self.list_all
-        except AttributeError:
-            pass
-        try:
-            del self.executables
-        except AttributeError:
-            pass
-        try:
-            del self.restorables
-        except AttributeError:
-            pass
+        """Drop @cached_property values so the next access recomputes from git."""
+        for attr in ("short_status", "list_all", "executables", "restorables"):
+            self.__dict__.pop(attr, None)
 
     # All of these functions are breaking from the 'Repository'
     # But I don't yet know how... TODO
