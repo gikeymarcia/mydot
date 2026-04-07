@@ -57,22 +57,23 @@ ease.
 4. **Feel the power** with `mydot` (and the pre-installed alias `d.`)
 
     ```bash
-    d. -e           # modify tracked files in your $EDITOR (tab in fzf for multiselect)
-    d. -a           # choose which modified files to stage for commit
+    d. edit         # modify tracked files in your $EDITOR (tab in fzf for multiselect)
+    d. add          # choose which modified files to stage for commit
     d. git commit   # commit changes
 
-    d. -g "EDITOR"  # find all files with lines containing the string EDITOR
-                    # works with regex too! e.g, EDITOR$ something.*var ^$
+    d. grep zfs     # find all files with lines containing the string zfs
+    d. grep zfs$    # works with regex too! e.g, zfs$ something.*var ^$
+    d. grep -E "zfs|ext4" # extended regexp
 
-    d. -r           # run any executable script in your dotfiles repo
-    d. -s           # see the state of your repo
-    d. -l           # list all files under version control
+    d. run          # run any executable script in your dotfiles repo
+    d. status       # see the state of your repo
+    d. ls           # list all files under version control
 
-    d. --export     # make a tarball of your dotfiles + bare git repo
-    d. --clip       # put file paths into the clipboard
+    d. export       # make a tarball of your dotfiles + bare git repo
+    d. clip         # put file paths into the clipboard
 
-    d. --restore    # remove files from staging area
-    d. --discard    # discard unstaged changes from work tree
+    d. restore      # remove files from staging area
+    d. discard      # discard unstaged changes from work tree
 
     d.              # see the help message detailing available commands
     ```
@@ -82,17 +83,9 @@ ease.
 ### Useful aliases
 
 ```bash
-alias es="mydot --edit"     # quick select a file to edit
-alias rs="mydot --run"      # quick select a script to run
+alias es="mydot edit"     # quick select a file to edit
+alias rs="mydot run"      # quick select a script to run
 ```
-
-If you ever run into an issue where the `mydot` CLI is reading flags meant for 
-`mydot git` you can fallback to the `config` alias from step 1 which acts as a 
-special git command that only applies for the dotfiles repo.
-
-For example `mydot git rm -r ~/.tmux` would see the `-r` flag and try to run an
-executable in your dotfiles. Instead use `config rm -r ~/.tmux` and the files
-in the directory will be removed recursively.
 
 ### Source of Truth
 
