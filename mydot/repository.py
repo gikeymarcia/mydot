@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
-from typing import List, Union
+from typing import List, Optional, Union
 
 
 from mydot.console import console
@@ -131,12 +131,16 @@ class Repository:
             text=True,
             capture_output=True,
         ).stdout.split("\x00")
-        return [row.split("\t")[-1] for row in output_lines if len(row) > 0]
+        return [
+            row.split("\t")[-1]
+            for row in output_lines
+            if row and not row.startswith("160000")
+        ]
 
     @cached_property
     def list_all(self) -> List[str]:
         """List of all files in repo [+new adds, -things going ]. (relative paths)"""
-        include = self.tracked + self.adds_staged + self.renames
+        include = self.tracked + self.adds_staged + self.renames + self.submodule_files
         removed = self.deleted_staged + self.oldnames
         combined = [f for f in include if f not in removed]
         return sorted(list(set(combined)))
@@ -188,10 +192,72 @@ class Repository:
         """Returns all files which could be affected by `git restore --staged`."""
         return sorted(self.modified_staged + self.deleted_staged + self.adds_staged)
 
+    # Submodules
+    def _submodule_entries(self) -> List[str]:
+        """Return relative paths of registered submodules from ls-tree."""
+        output = subprocess.run(
+            self._git_base
+            + ["ls-tree", "--full-tree", "--full-name", "-r", "HEAD", "-z"],
+            text=True,
+            capture_output=True,
+        ).stdout.split("\x00")
+        return [row.split("\t")[-1] for row in output if row and row.startswith("160000")]
+
+    def _resolve_submodule_git_dir(self, submodule_rel_path: str) -> Optional[Path]:
+        """Find the git directory for a submodule on disk."""
+        dot_git = self.work_tree / submodule_rel_path / ".git"
+        if dot_git.is_file():
+            content = dot_git.read_text().strip()
+            if content.startswith("gitdir:"):
+                resolved = (dot_git.parent / content[len("gitdir:"):].strip()).resolve()
+                return resolved if resolved.is_dir() else None
+        elif dot_git.is_dir():
+            return dot_git
+        return None
+
+    def _list_submodule_files(self, submodule_rel_path: str, depth: int) -> List[str]:
+        """List tracked files inside a submodule, prefixed with its path."""
+        if depth <= 0:
+            return []
+        git_dir = self._resolve_submodule_git_dir(submodule_rel_path)
+        if git_dir is None:
+            return []
+        sub_work_tree = self.work_tree / submodule_rel_path
+        sub_git_base = ["git", f"--git-dir={git_dir}", f"--work-tree={sub_work_tree}"]
+        result = subprocess.run(
+            sub_git_base + ["ls-tree", "--full-tree", "--full-name", "-r", "HEAD", "-z"],
+            text=True,
+            capture_output=True,
+        )
+        if result.returncode != 0:
+            return []
+        files = []
+        nested_submodules = []
+        for row in result.stdout.split("\x00"):
+            if not row:
+                continue
+            if row.startswith("160000"):
+                nested_submodules.append(row.split("\t")[-1])
+            else:
+                files.append(f"{submodule_rel_path}/{row.split(chr(9))[-1]}")
+        for nested in nested_submodules:
+            files.extend(
+                self._list_submodule_files(f"{submodule_rel_path}/{nested}", depth - 1)
+            )
+        return files
+
+    @cached_property
+    def submodule_files(self) -> List[str]:
+        """List of files from all submodules (depth=2)."""
+        files = []
+        for sub_path in self._submodule_entries():
+            files.extend(self._list_submodule_files(sub_path, depth=2))
+        return sorted(files)
+
     # Cache
     def freshen(self) -> None:
         """Drop @cached_property values so the next access recomputes from git."""
-        for attr in ("short_status", "list_all", "executables", "restorables"):
+        for attr in ("short_status", "list_all", "executables", "restorables", "submodule_files"):
             self.__dict__.pop(attr, None)
 
     # All of these functions are breaking from the 'Repository'

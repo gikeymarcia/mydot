@@ -187,6 +187,81 @@ def clean_repo(tmp_path):
     }
 
 
+@pytest.fixture
+def submodule_repo(tmp_path):
+    """A bare repo with a submodule and a nested submodule (depth=2)."""
+    import os
+
+    bare = tmp_path / "bare"
+    worktree = tmp_path / "worktree"
+    bare.mkdir()
+    worktree.mkdir()
+    sp.run(["git", "init", "--bare", bare], capture_output=True)
+
+    def parent_git(*args):
+        cmd = ["git", f"--git-dir={bare}", f"--work-tree={worktree}"]
+        return sp.run(cmd + list(args), capture_output=True, text=True)
+
+    # Allow local file:// transport for submodule cloning
+    parent_git("config", "protocol.file.allow", "always")
+
+    # Create a regular file in parent repo
+    top_file = worktree / "topfile"
+    top_file.write_text("top level file\n")
+    parent_git("add", str(top_file))
+    parent_git("commit", "-m", "add topfile")
+
+    # -- Create the inner submodule origin (depth=2) --
+    inner_origin = tmp_path / "inner_origin"
+    inner_origin.mkdir()
+    sp.run(["git", "init", inner_origin], capture_output=True)
+    (inner_origin / "inner.conf").write_text("inner config\n")
+    sp.run(["git", "add", "inner.conf"], capture_output=True, cwd=inner_origin)
+    sp.run(["git", "commit", "-m", "inner init"], capture_output=True, cwd=inner_origin)
+
+    # -- Create the outer submodule origin --
+    outer_origin = tmp_path / "outer_origin"
+    outer_origin.mkdir()
+    sp.run(["git", "init", outer_origin], capture_output=True)
+    (outer_origin / "tmux.conf").write_text("set -g mouse on\n")
+    sp.run(["git", "add", "tmux.conf"], capture_output=True, cwd=outer_origin)
+    sp.run(["git", "commit", "-m", "outer init"], capture_output=True, cwd=outer_origin)
+    # Add inner as nested submodule of outer
+    sp.run(
+        ["git", "-c", "protocol.file.allow=always",
+         "submodule", "add", str(inner_origin), "plugins/inner"],
+        capture_output=True, cwd=outer_origin,
+    )
+    sp.run(["git", "commit", "-m", "add inner submodule"],
+           capture_output=True, cwd=outer_origin)
+
+    # -- Add outer submodule to parent bare repo --
+    env = os.environ.copy()
+    env["GIT_DIR"] = str(bare)
+    env["GIT_WORK_TREE"] = str(worktree)
+    sp.run(
+        ["git", "-c", "protocol.file.allow=always",
+         "submodule", "add", str(outer_origin), "config/tmux"],
+        capture_output=True, cwd=worktree, env=env,
+    )
+    parent_git("add", "-A")
+    parent_git("commit", "-m", "add outer submodule")
+
+    # Initialize nested submodules recursively (depth=2)
+    sp.run(
+        ["git", "-c", "protocol.file.allow=always",
+         "submodule", "update", "--init", "--recursive"],
+        capture_output=True, cwd=worktree, env=env,
+    )
+
+    return {
+        "bare": bare,
+        "worktree": worktree,
+        "git": parent_git,
+        "df": mydot.Repository(bare, worktree),
+    }
+
+
 def appears_in(fake: dict, keys: Union[List[str], str]) -> List[str]:
     """Filters a fake repo return object by given keys."""
     filters = [keys] if isinstance(keys, str) else keys
