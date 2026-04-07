@@ -14,7 +14,7 @@ from mydot.repository import Repository
 
 class Actions(Protocol):
     def run(self):
-        raise NotImplementedError
+        ...
 
 
 class EditFiles(Actions):
