@@ -10,8 +10,10 @@ import mydot
 from mydot.actions import (
     AddChanges,
     DiscardChanges,
+    FzfSelector,
     GitPassthrough,
     Grep,
+    History,
     Restore,
 )
 
@@ -258,3 +260,139 @@ def test_discard_exits_on_no_selection(fake_repo):
         action = DiscardChanges(dotfiles)
         with pytest.raises(SystemExit):
             action.run()
+
+
+# -- FzfSelector tests --
+
+
+def test_fzf_selector_prints_absolute_paths(clean_repo, capsys):
+    """FzfSelector should print absolute paths to stdout."""
+    dotfiles = clean_repo["df"]
+    worktree = clean_repo["worktree"]
+
+    with patch("pydymenu.fzf", return_value=["fileA", "fileB"]):
+        FzfSelector(dotfiles).run()
+
+    output = capsys.readouterr().out.strip().split("\n")
+    assert str(worktree / "fileA") in output[0]
+    assert str(worktree / "fileB") in output[1]
+
+
+def test_fzf_selector_exits_on_no_selection(clean_repo):
+    """FzfSelector should sys.exit when fzf returns None."""
+    dotfiles = clean_repo["df"]
+
+    with patch("pydymenu.fzf", return_value=None):
+        with pytest.raises(SystemExit):
+            FzfSelector(dotfiles).run()
+
+
+def test_fzf_selector_returns_paths(clean_repo):
+    """FzfSelector.run() should return list of absolute path strings."""
+    dotfiles = clean_repo["df"]
+    worktree = clean_repo["worktree"]
+
+    with patch("pydymenu.fzf", return_value=["fileA"]):
+        result = FzfSelector(dotfiles).run()
+
+    assert len(result) == 1
+    assert result[0] == str((worktree / "fileA").resolve())
+
+
+# -- History tests --
+
+
+def test_history_exits_on_no_file_selection(clean_repo):
+    """History should sys.exit when no file is selected."""
+    dotfiles = clean_repo["df"]
+    mock_editor = MagicMock()
+
+    with patch("pydymenu.fzf", return_value=None):
+        with pytest.raises(SystemExit):
+            History(dotfiles, editor=mock_editor).run()
+
+
+def test_history_exits_on_empty_log(clean_repo):
+    """History should sys.exit when the file has no git history."""
+    dotfiles = clean_repo["df"]
+    mock_editor = MagicMock()
+
+    # fzf returns a file, but git log returns nothing
+    with patch("pydymenu.fzf", return_value=["fileA"]), \
+         patch("mydot.actions.subprocess.run") as mock_sub:
+        mock_sub.return_value = MagicMock(stdout="", returncode=0)
+        with pytest.raises(SystemExit):
+            History(dotfiles, editor=mock_editor).run()
+
+
+def test_history_exits_on_no_commit_selection(clean_repo):
+    """History should sys.exit when no commit is selected."""
+    dotfiles = clean_repo["df"]
+    mock_editor = MagicMock()
+
+    # First fzf returns file, second returns None
+    fzf_calls = [["fileA"], None]
+    with patch("pydymenu.fzf", side_effect=fzf_calls), \
+         patch("mydot.actions.subprocess.run") as mock_sub:
+        mock_sub.return_value = MagicMock(stdout="abc1234 initial commit\n", returncode=0)
+        with pytest.raises(SystemExit):
+            History(dotfiles, editor=mock_editor).run()
+
+
+def test_history_opens_current_and_old_in_editor(fake_repo):
+    """History should open current file and temp file with old version in editor."""
+    dotfiles = fake_repo["df"]
+    mock_editor = MagicMock()
+
+    # Need a file with real git history
+    tracked = dotfiles.tracked
+    assert len(tracked) > 0
+    target = tracked[0]
+
+    # Get a real commit hash
+    log = sp.run(
+        dotfiles._git_base + ["log", "--oneline", "--", target],
+        capture_output=True, text=True,
+    )
+    commit_line = log.stdout.strip().split("\n")[0]
+
+    fzf_calls = [[target], [commit_line]]
+    with patch("pydymenu.fzf", side_effect=fzf_calls):
+        History(dotfiles, editor=mock_editor).run()
+
+    mock_editor.open.assert_called_once()
+    files_opened = mock_editor.open.call_args[0][0]
+    assert len(files_opened) == 2
+    # First should be the current file (absolute path)
+    assert files_opened[0] == Path(target).absolute()
+    # Second should be a temp file that exists
+    assert files_opened[1].exists()
+
+
+def test_history_temp_file_has_old_content(fake_repo):
+    """The temp file should contain the content from the selected commit."""
+    dotfiles = fake_repo["df"]
+    mock_editor = MagicMock()
+
+    tracked = dotfiles.tracked
+    target = tracked[0]
+
+    log = sp.run(
+        dotfiles._git_base + ["log", "--oneline", "--", target],
+        capture_output=True, text=True,
+    )
+    commit_line = log.stdout.strip().split("\n")[0]
+    commit_hash = commit_line.split()[0]
+
+    # Get expected content
+    expected = sp.run(
+        dotfiles._git_base + ["show", f"{commit_hash}:{target}"],
+        capture_output=True, text=True,
+    ).stdout
+
+    fzf_calls = [[target], [commit_line]]
+    with patch("pydymenu.fzf", side_effect=fzf_calls):
+        History(dotfiles, editor=mock_editor).run()
+
+    temp_file = mock_editor.open.call_args[0][0][1]
+    assert temp_file.read_text() == expected

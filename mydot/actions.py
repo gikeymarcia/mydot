@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import tempfile
 from typing import List, Optional, Protocol
 from pathlib import Path
 
@@ -63,6 +64,27 @@ class Clipboard(Actions):
             combined = " ".join(absolute_paths)
             self.clipper.clip(combined)
             return absolute_paths
+
+
+class FzfSelector(Actions):
+    """Select file paths and print to stdout for piping."""
+
+    def __init__(self, src_repo: Repository):
+        self.repo = src_repo
+
+    def run(self) -> List[str]:
+        selections = pydymenu.fzf(
+            self.repo.list_all,
+            prompt="Select file(s): ",
+            multi=True,
+            preview=f"{self.repo.preview_app}" + " {}",
+        )
+        if selections is None:
+            sys.exit("No selection made. Cancelling action.")
+        absolute_paths = [str((self.repo.work_tree / s).resolve()) for s in selections]
+        for path in absolute_paths:
+            print(path)
+        return absolute_paths
 
 
 class GitPassthrough(Actions):
@@ -199,6 +221,64 @@ class Grep(Actions):
             return choices
         else:
             sys.exit("No selections made. Cancelling action.")
+
+
+class History(Actions):
+    """Browse and compare file history."""
+
+    def __init__(self, src_repo: Repository, editor: Optional[Editor] = None):
+        self.repo = src_repo
+        self.editor = find_editor() if editor is None else editor
+
+    def run(self) -> Optional[Path]:
+        # Step 1: Pick a file
+        selection = pydymenu.fzf(
+            self.repo.list_all,
+            prompt="Pick a file to view history: ",
+            multi=False,
+            preview=f"{self.repo.preview_app}" + " {}",
+        )
+        if selection is None:
+            sys.exit("No selection made. Cancelling action.")
+        filepath = selection[0]
+
+        # Step 2: Get commit log
+        log_result = subprocess.run(
+            self.repo._git_base + ["log", "--oneline", "--", filepath],
+            capture_output=True,
+            text=True,
+        )
+        commits = [line for line in log_result.stdout.strip().split("\n") if line]
+        if not commits:
+            sys.exit(f"No history found for {filepath}")
+
+        # Step 3: Pick a commit with preview
+        chosen = pydymenu.fzf(
+            commits,
+            prompt=f"History of {filepath}: ",
+            multi=False,
+            preview=f"{self.repo._git_str} show " + "{1}" + f":{filepath}",
+        )
+        if chosen is None:
+            sys.exit("No selection made. Cancelling action.")
+        commit_hash = chosen[0].split()[0]
+
+        # Step 4: Save old version to temp file, open both in editor
+        old_content = subprocess.run(
+            self.repo._git_base + ["show", f"{commit_hash}:{filepath}"],
+            capture_output=True,
+            text=True,
+        )
+        suffix = Path(filepath).suffix or ".txt"
+        old_file = Path(tempfile.mktemp(
+            prefix=f"{Path(filepath).stem}_{commit_hash}_",
+            suffix=suffix,
+        ))
+        old_file.write_text(old_content.stdout)
+
+        current_file = Path(filepath).absolute()
+        self.editor.open([current_file, old_file])
+        return current_file
 
 
 class Restore(Actions):

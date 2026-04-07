@@ -12,8 +12,10 @@ from mydot.actions import (
     Clipboard,
     DiscardChanges,
     ExportTar,
+    FzfSelector,
     GitPassthrough,
     Grep,
+    History,
     Restore,
     RunExecutable,
     EditFiles,
@@ -56,6 +58,8 @@ def main():
     subparsers.add_parser("restore", help="Unstage file(s)")
     subparsers.add_parser("export", help="Tarball of all tracked files")
     subparsers.add_parser("clip", help="Copy absolute paths to clipboard")
+    subparsers.add_parser("fzf", help="Select file(s) and print paths to stdout")
+    subparsers.add_parser("history", help="Browse file history and compare versions")
 
     git_parser = subparsers.add_parser("git", help="Pass commands to git")
     git_parser.add_argument("args", nargs=argparse.REMAINDER)
@@ -86,6 +90,10 @@ def main():
             ExportTar(dotfiles).run()
         case "clip":
             Clipboard(dotfiles).run()
+        case "fzf":
+            FzfSelector(dotfiles).run()
+        case "history":
+            History(dotfiles).run()
         case "git":
             logging.info(f'git command: {sys.argv[2:]}')
             GitPassthrough(dotfiles, sys.argv[2:]).run()

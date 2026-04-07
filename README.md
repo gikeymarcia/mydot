@@ -75,6 +75,9 @@ ease.
     d. restore      # remove files from staging area
     d. discard      # discard unstaged changes from work tree
 
+    d. fzf          # select files and print paths to stdout (for piping)
+    d. history      # browse and compare file history
+
     d.              # see the help message detailing available commands
     ```
 
