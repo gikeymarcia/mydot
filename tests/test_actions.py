@@ -2,7 +2,7 @@ import os
 import subprocess as sp
 import tarfile
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -66,6 +66,94 @@ def test_grep_join_args_mixed(clean_repo):
 def test_grep_join_args_multiple_plain(clean_repo):
     grep = Grep(clean_repo["df"], ["-n", "-i", "pattern"])
     assert grep.joined == " -n -i pattern"
+
+
+# -- Grep search= passed to editor --
+
+
+def test_grep_passes_pattern_string_to_editor(clean_repo):
+    """Grep.run() should pass search as a str, not a list."""
+    dotfiles = clean_repo["df"]
+    worktree = clean_repo["worktree"]
+    # Create a file with searchable content
+    (worktree / "fileA").write_text("TODO fix this\n")
+
+    mock_editor = MagicMock()
+    grep = Grep(dotfiles, ["TODO"])
+
+    with patch("pydymenu.fzf", return_value=["fileA"]), \
+         patch("mydot.actions.find_editor", return_value=mock_editor):
+        grep.run()
+
+    mock_editor.open.assert_called_once()
+    _, kwargs = mock_editor.open.call_args
+    assert isinstance(kwargs["search"], str)
+    assert kwargs["search"] == "TODO"
+
+
+def test_grep_passes_last_arg_as_search(clean_repo):
+    """When regexp includes flags, only the pattern (last arg) goes to the editor."""
+    dotfiles = clean_repo["df"]
+    worktree = clean_repo["worktree"]
+    (worktree / "fileA").write_text("TODO fix this\n")
+
+    mock_editor = MagicMock()
+    grep = Grep(dotfiles, ["-i", "TODO"])
+
+    with patch("pydymenu.fzf", return_value=["fileA"]), \
+         patch("mydot.actions.find_editor", return_value=mock_editor):
+        grep.run()
+
+    _, kwargs = mock_editor.open.call_args
+    assert kwargs["search"] == "TODO"
+
+
+# -- Editor search command integration --
+
+
+def test_neovim_search_command(tmp_path):
+    """Neovim should pass search as /<pattern> to -c flag."""
+    from mydot.editor import Neovim
+
+    f = tmp_path / "test.txt"
+    f.write_text("hello\n")
+
+    with patch("mydot.editor.subprocess.run") as mock_run:
+        Neovim().open([f], search="TODO")
+
+    cmd = mock_run.call_args[0][0]
+    assert "-c" in cmd
+    assert "/TODO" in cmd
+    assert "['TODO']" not in str(cmd)
+
+
+def test_vim_search_command(tmp_path):
+    """Vim should pass search as /<pattern> to -c flag."""
+    from mydot.editor import Vim
+
+    f = tmp_path / "test.txt"
+    f.write_text("hello\n")
+
+    with patch("mydot.editor.subprocess.run") as mock_run:
+        Vim().open([f], search="TODO")
+
+    cmd = mock_run.call_args[0][0]
+    assert "-c" in cmd
+    assert "/TODO" in cmd
+
+
+def test_nano_search_command(tmp_path):
+    """Nano should pass search as +c/<pattern>."""
+    from mydot.editor import Nano
+
+    f = tmp_path / "test.txt"
+    f.write_text("hello\n")
+
+    with patch("mydot.editor.subprocess.run") as mock_run:
+        Nano().open([f], search="TODO")
+
+    cmd = mock_run.call_args[0][0]
+    assert "+c/TODO" in cmd
 
 
 # -- ExportTar tests --

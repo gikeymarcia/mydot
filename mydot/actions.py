@@ -194,7 +194,7 @@ class Grep(Actions):
         if choices is not None:
             editor = find_editor()
             logging.debug(f"Grep.run() search term: {self.regexp}")
-            editor.open([Path(file).absolute() for file in choices], search=self.regexp)
+            editor.open([Path(file).absolute() for file in choices], search=self.regexp[-1])
             self.repo.freshen()
             return choices
         else:
