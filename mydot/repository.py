@@ -138,8 +138,8 @@ class Repository:
         """List of all files in repo [+new adds, -things going ]. (relative paths)"""
         include = self.tracked + self.adds_staged + self.renames
         removed = self.deleted_staged + self.oldnames
-        all = [f for f in include if f not in removed]
-        return sorted(list(set(all)))
+        combined = [f for f in include if f not in removed]
+        return sorted(list(set(combined)))
 
     @cached_property
     def _git_str(self) -> str:
