@@ -95,7 +95,7 @@ def main():
         case "history":
             History(dotfiles).run()
         case "git":
-            logging.info(f'git command: {sys.argv[2:]}')
+            logging.debug(f'git command: {sys.argv[2:]}')
             GitPassthrough(dotfiles, sys.argv[2:]).run()
         case _:
             parser.print_help()
