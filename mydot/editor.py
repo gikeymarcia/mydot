@@ -11,7 +11,6 @@ from mydot.logging import logging
 
 
 class Editor(Protocol):
-    # TODO: throw error when DOTFILES is not defined
     program: str
 
     def open(self, files: List[Path], search: Optional[str] = None) -> None:

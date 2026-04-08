@@ -260,17 +260,6 @@ class Repository:
         for attr in ("short_status", "list_all", "executables", "restorables", "submodule_files"):
             self.__dict__.pop(attr, None)
 
-    # All of these functions are breaking from the 'Repository'
-    # But I don't yet know how... TODO
-    #      __     _
-    #     / _|   | |     ___   __ __ __
-    #    |  _|   | |    / _ \  \ V  V /
-    #   _|_|_   _|_|_   \___/   \_/\_/
-    # _|"""""|_|"""""|_|"""""|_|"""""|
-    # "`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'
-    # How do these objects interact?
-    # Which models of action bring relevance and agency?
-
     @property
     def list_all_as_path(self) -> List[Path]:
         """List of Path() objects for each file in the repository."""
