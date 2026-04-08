@@ -19,8 +19,8 @@ class Actions(Protocol):
 
 
 class EditFiles(Actions):
-    def __init__(self, src_repo: Repository, editor: Optional[Editor] = None) -> None:
-        self.repo: Repository = src_repo
+    def __init__(self, repo: Repository, editor: Optional[Editor] = None) -> None:
+        self.repo: Repository = repo
         self.editor: Editor = find_editor() if editor is None else editor
         logging.debug(f"Editing a file __init__ object complete.")
 
@@ -69,8 +69,8 @@ class Clipboard(Actions):
 class FzfSelector(Actions):
     """Select file paths and print to stdout for piping."""
 
-    def __init__(self, src_repo: Repository):
-        self.repo = src_repo
+    def __init__(self, repo: Repository):
+        self.repo = repo
 
     def run(self) -> List[str]:
         selections = pydymenu.fzf(
@@ -100,8 +100,8 @@ class GitPassthrough(Actions):
 
 
 class AddChanges(Actions):
-    def __init__(self, src_repo: Repository):
-        self.repo = src_repo
+    def __init__(self, repo: Repository):
+        self.repo = repo
 
     def run(self) -> List[str]:
         modified_unstaged = self.repo.modified_unstaged
@@ -123,8 +123,8 @@ class AddChanges(Actions):
 
 
 class ExportTar(Actions):
-    def __init__(self, src_repo: Repository):
-        self.repo = src_repo
+    def __init__(self, repo: Repository):
+        self.repo = repo
 
     def run(self):
         # TODO: incorporate a 'privatemask' feature
@@ -146,8 +146,8 @@ class ExportTar(Actions):
 
 
 class RunExecutable(Actions):
-    def __init__(self, src_repo: Repository):
-        self.repo = src_repo
+    def __init__(self, repo: Repository):
+        self.repo = repo
 
     def run(self) -> str:
         """Interactively choose an executable to run. Optionally add arguements."""
@@ -178,8 +178,8 @@ class RunExecutable(Actions):
 
 
 class Grep(Actions):
-    def __init__(self, src_repo: Repository, regexp: list[str]):
-        self.repo = src_repo
+    def __init__(self, repo: Repository, regexp: list[str]):
+        self.repo = repo
         self.regexp = regexp
         self.joined = self.join_args(regexp)
         logging.debug(f"Making Grep Object: {repr(self)}")
@@ -226,8 +226,8 @@ class Grep(Actions):
 class History(Actions):
     """Browse and compare file history."""
 
-    def __init__(self, src_repo: Repository, editor: Optional[Editor] = None):
-        self.repo = src_repo
+    def __init__(self, repo: Repository, editor: Optional[Editor] = None):
+        self.repo = repo
         self.editor = find_editor() if editor is None else editor
 
     def run(self) -> Optional[Path]:
@@ -282,8 +282,8 @@ class History(Actions):
 
 
 class Restore(Actions):
-    def __init__(self, src_repo: Repository) -> None:
-        self.repo = src_repo
+    def __init__(self, repo: Repository) -> None:
+        self.repo = repo
         self.result: Optional[List[str]] = None
 
     def run(self) -> None:
@@ -309,8 +309,8 @@ class Restore(Actions):
 
 
 class DiscardChanges(Actions):
-    def __init__(self, src_repo: Repository) -> None:
-        self.repo = src_repo
+    def __init__(self, repo: Repository) -> None:
+        self.repo = repo
         self.result: Optional[List[str]] = None
 
     def run(self):
