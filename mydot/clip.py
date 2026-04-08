@@ -2,7 +2,7 @@
 # https://github.com/gikeymarcia/mydot
 
 import shutil
-import subprocess as sp
+import subprocess
 from typing import Protocol
 
 
@@ -11,7 +11,7 @@ class Clipper(Protocol):
 
     def clip(self, data: str) -> None:
         """Copy data to clipboard."""
-        raise NotImplementedError
+        ...
 
     def success(self, data: str, location: str = "clipboard"):
         """Print a success message after using a Clipper"""
@@ -27,7 +27,7 @@ class Xclip(Clipper):
     name = "xclip"
 
     def clip(self, data: str):
-        sp.run(["xclip", "-selection", "clipboard"], input=data.encode("utf-8"))
+        subprocess.run(["xclip", "-selection", "clipboard"], input=data.encode("utf-8"))
         self.success(data)
 
 
@@ -35,7 +35,7 @@ class Xsel(Clipper):
     name = "xsel"
 
     def clip(self, data: str):
-        sp.run(["xsel", "-ib"], input=data.encode("utf-8"))
+        subprocess.run(["xsel", "-ib"], input=data.encode("utf-8"))
         self.success(data)
 
 
@@ -43,7 +43,7 @@ class Pbcopy(Clipper):
     name = "pbcopy"
 
     def clip(self, data: str):
-        sp.run(["pbcopy"], input=data.encode("utf-8"))
+        subprocess.run(["pbcopy"], input=data.encode("utf-8"))
         self.success(data)
 
 

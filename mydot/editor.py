@@ -18,7 +18,7 @@ class Editor(Protocol):
         Open selected files in a text editorself.
         Optionally, define a search string once files are opened.
         """
-        raise NotImplementedError
+        ...
 
 
 class UserDefinedEditor(Editor):
