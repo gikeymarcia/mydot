@@ -18,4 +18,5 @@
 
 ### Future
 
+- [ ] Make `d. history` work for submodule files (query the submodule's own git log)
 - [ ] Record asciinema demos for each subcommand

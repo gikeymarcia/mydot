@@ -81,6 +81,16 @@ ease.
     d.              # see the help message detailing available commands
     ```
 
+## Submodule Support
+
+If your dotfiles repo contains git submodules (e.g., `~/.config/tmux`), mydot
+will include their tracked files in `edit`, `fzf`, `clip`, `grep`, `ls`, and
+`export` (up to 2 levels deep).
+
+**Known limitation:** `d. history` will list submodule files but cannot show
+their per-file commit history. The outer repo only tracks the submodule pointer,
+not individual file changes within the submodule.
+
 ## Going Deeper
 
 ### Useful aliases
