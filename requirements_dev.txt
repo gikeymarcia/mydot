@@ -2,17 +2,12 @@
 -r requirements.txt
 # testing
 pytest
-ipdb
 mypy
 
 # dev tooling
-pynvim
 black
 bump-my-version
 # https://github.com/callowayproject/bump-my-version
-
-# documentation tooling
-asciinema
 
 # pip install current project
 --editable .

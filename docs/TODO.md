@@ -15,3 +15,7 @@
         3. fzf picker with preview of each version
         4. Upon selection open file in split view with current version
 - [x] fzf: selector meant to send through a pipeline `d. fzf | xargs ...`
+
+### Future
+
+- [ ] Record asciinema demos for each subcommand

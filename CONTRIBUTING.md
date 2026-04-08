@@ -121,8 +121,8 @@ Run `scripts/test.sh` — tests should fail.
 # mydot/actions.py
 
 class Example(Actions):
-    def __init__(self, src_repo: Repository):
-        self.repo = src_repo
+    def __init__(self, repo: Repository):
+        self.repo = repo
 
     def run(self) -> ...:
         selections = pydymenu.fzf(

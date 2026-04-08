@@ -34,7 +34,7 @@ scripts/test-watch.sh
 
 ## Version Bumping
 
-Uses [bump-my-version](https://github.com/callowayproject/bump-my-version). Config lives in `.bumpversion.cfg` and updates `setup.py` + `mydot/__init__.py`.
+Uses [bump-my-version](https://github.com/callowayproject/bump-my-version). Config lives in `.bumpversion.toml` and updates `setup.py` + `mydot/__init__.py`.
 
 Show current version and available bumps:
 
@@ -50,7 +50,7 @@ scripts/bump.sh minor     # 0.8.0 → 0.9.0
 scripts/bump.sh major     # 0.8.0 → 1.0.0
 ```
 
-This creates a git tag (`v0.8.1`, etc.) but does not auto-commit (configured in `.bumpversion.cfg`).
+This creates a git tag (`v0.8.1`, etc.) but does not auto-commit (configured in `.bumpversion.toml`).
 
 ## Building and Publishing
 

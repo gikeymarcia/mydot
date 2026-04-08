@@ -9,7 +9,7 @@ To begin I'm pulling all of the actions out of the `Repository` class.
 
 ```python
 class ActionWithPreviewer:
-    def __init__(self, src_repo: Repository, previewer=None)
+    def __init__(self, repo: Repository, previewer=None)
     self.previewer: Previewer = previewer if previewer else None
 
     def run(self, previewer=None):

@@ -19,22 +19,13 @@ Attempting to track which features of Python I'm using that effect compatability
 - Assignment expressions a.ka. [the walrus operator][walrus]
 - Using the `@cached_property` decorator from [`functools`][cached prop]
 
-## Want to Use
-
 ### Python 3.10 +
 
-- replace `from typing import Union` with the new `|` syntax in [PEP 604][union]
+- Structural pattern matching (`match`/`case`) via [PEP 634][match]
+- Union type syntax `X | Y` via [PEP 604][union] (used in some places, `typing.Union` still present in others)
 
-### Python 3.9 +
-
-- Use native `list` constructor for type hints. Before 3.9 it is necessary to 
-  do:
-
-  ```python
-  from typing import List
-
-  items: List[str] = some_func()
-  ```
+[match]: <https://www.python.org/dev/peps/pep-0634/>
+"PEP 634 -- Structural Pattern Matching"
 
 [union]: <https://www.python.org/dev/peps/pep-0604/>
 "PEP 604 -- Allow writing union types as X | Y"
