@@ -210,6 +210,24 @@ scripts/test.sh -k "grep"    # run tests matching "grep"
 scripts/test-watch.sh        # re-run on file changes (TDD mode)
 ```
 
+## Releasing
+
+1. Add an entry to `CHANGELOG.md` under a new `## [X.Y.Z] - YYYY-MM-DD` section
+   summarizing user-visible changes. Do this **before** bumping — the bump
+   commit should include the changelog entry.
+2. `scripts/bump.sh {major|minor|patch}` — runs `bump-my-version` which
+   updates `mydot/__init__.py`, `setup.py`, and `.bumpversion.toml`, and
+   creates a `vX.Y.Z` tag.
+3. Open an MR from a release branch to `master` (master is protected).
+4. After merge: `scripts/build.sh test` to stage on test.pypi.org, verify the
+   page at `https://test.pypi.org/project/mydot/X.Y.Z/`, then
+   `scripts/build.sh pypi` for the real release.
+
+`~/.pypirc` needs `[testpypi]` and `[pypi]` sections (username `__token__`,
+password = token). The build script uploads via `-r testpypi` / `-r pypi`
+aliases, so twine's built-in endpoints are used — do **not** override with
+`--repository-url` or custom repo sections pointing at browse URLs.
+
 ## Style Notes
 
 - Use `match/case` for dispatch (Python 3.10+)

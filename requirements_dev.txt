@@ -13,4 +13,5 @@ bump-my-version
 --editable .
 
 # publishing packages
+build
 twine
