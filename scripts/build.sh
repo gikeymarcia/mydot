@@ -21,7 +21,7 @@ source "${VENV_DIR}/bin/activate"
 rm -rf "${PROJECT_DIR}/build" "${PROJECT_DIR}/dist"
 
 echo "Building source distribution and wheel"
-python3 "${PROJECT_DIR}/setup.py" sdist bdist_wheel
+python -m build "${PROJECT_DIR}"
 
 echo ""
 echo "Build contents:"
@@ -40,11 +40,11 @@ if [ -z "$TARGET" ]; then
 elif [ "$TARGET" == "test" ]; then
     echo ""
     echo "Uploading to test.pypi.org"
-    twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+    twine upload -r testpypi dist/*
 elif [ "$TARGET" == "pypi" ]; then
     echo ""
     echo "Uploading to pypi.org"
-    twine upload dist/*
+    twine upload -r pypi dist/*
 else
     echo "Unknown target: $TARGET (use 'test' or 'pypi')"
     exit 1

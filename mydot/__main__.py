@@ -6,7 +6,7 @@ import argparse
 import sys
 from mydot.logging import logging
 
-from mydot import Repository
+from mydot import Repository, __version__
 from mydot.actions import (
     AddChanges,
     Clipboard,
@@ -43,6 +43,7 @@ def main():
         description=rich_str["desc"],
         epilog=rich_str["epilog"],
     )
+    parser.add_argument("-v", "--version", action="version", version=f"v{__version__}")
     subparsers = parser.add_subparsers(dest="command")
 
     subparsers.add_parser("edit", help="Interactively choose file(s) to edit")
