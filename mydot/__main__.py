@@ -9,6 +9,7 @@ from mydot.logging import logging
 from mydot import Repository, __version__
 from mydot.actions import (
     AddChanges,
+    ChangeDir,
     Clipboard,
     DiscardChanges,
     ExportTar,
@@ -58,6 +59,7 @@ def main():
     subparsers.add_parser("discard", help="Revert unstaged file(s)")
     subparsers.add_parser("restore", help="Unstage file(s)")
     subparsers.add_parser("export", help="Tarball of all tracked files")
+    subparsers.add_parser("cd", help="Navigate to a dotfile's directory")
     subparsers.add_parser("clip", help="Copy absolute paths to clipboard")
     subparsers.add_parser("fzf", help="Select file(s) and print paths to stdout")
     subparsers.add_parser("history", help="Browse file history and compare versions")
@@ -89,6 +91,8 @@ def main():
             Restore(dotfiles).run()
         case "export":
             ExportTar(dotfiles).run()
+        case "cd":
+            ChangeDir(dotfiles).run()
         case "clip":
             Clipboard(dotfiles).run()
         case "fzf":

@@ -2,13 +2,14 @@ import os
 import subprocess as sp
 import tarfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, call
 
 import pytest
 
 import mydot
 from mydot.actions import (
     AddChanges,
+    ChangeDir,
     DiscardChanges,
     FzfSelector,
     GitPassthrough,
@@ -396,3 +397,88 @@ def test_history_temp_file_has_old_content(fake_repo):
 
     temp_file = mock_editor.open.call_args[0][0][1]
     assert temp_file.read_text() == expected
+
+
+# -- ChangeDir tests --
+
+
+def test_cd_exits_on_no_selection(clean_repo):
+    """ChangeDir should sys.exit when fzf returns None."""
+    dotfiles = clean_repo["df"]
+    with patch("pydymenu.fzf", return_value=None):
+        with pytest.raises(SystemExit):
+            ChangeDir(dotfiles).run()
+
+
+def test_cd_runs_default_listing(clean_repo, monkeypatch):
+    """ChangeDir should run 'ls -lA --color=auto' when MYDOT_CD_CMD is unset."""
+    dotfiles = clean_repo["df"]
+    worktree = clean_repo["worktree"]
+    monkeypatch.delenv("MYDOT_CD_CMD", raising=False)
+    monkeypatch.setenv("SHELL", "/bin/sh")
+    # warm cached properties so subprocess.run patch only sees our calls
+    _ = dotfiles.list_all
+
+    expected_dir = (worktree / "fileA").resolve().parent
+
+    with patch("pydymenu.fzf", return_value=["fileA"]), \
+         patch("mydot.actions.subprocess.run") as mock_run:
+        ChangeDir(dotfiles).run()
+
+    listing_call = mock_run.call_args_list[0]
+    assert listing_call == call(
+        ["ls", "-lA", "--color=auto"], cwd=expected_dir
+    )
+
+
+def test_cd_runs_custom_listing(clean_repo, monkeypatch):
+    """ChangeDir should use MYDOT_CD_CMD when set."""
+    dotfiles = clean_repo["df"]
+    worktree = clean_repo["worktree"]
+    monkeypatch.setenv("MYDOT_CD_CMD", "eza -la")
+    monkeypatch.setenv("SHELL", "/bin/sh")
+    _ = dotfiles.list_all
+
+    expected_dir = (worktree / "fileA").resolve().parent
+
+    with patch("pydymenu.fzf", return_value=["fileA"]), \
+         patch("mydot.actions.subprocess.run") as mock_run:
+        ChangeDir(dotfiles).run()
+
+    listing_call = mock_run.call_args_list[0]
+    assert listing_call == call(["eza", "-la"], cwd=expected_dir)
+
+
+def test_cd_spawns_shell(clean_repo, monkeypatch):
+    """ChangeDir should spawn $SHELL with cwd set to the target directory."""
+    dotfiles = clean_repo["df"]
+    worktree = clean_repo["worktree"]
+    monkeypatch.setenv("SHELL", "/bin/zsh")
+    monkeypatch.delenv("MYDOT_CD_CMD", raising=False)
+    _ = dotfiles.list_all
+
+    expected_dir = (worktree / "fileA").resolve().parent
+
+    with patch("pydymenu.fzf", return_value=["fileA"]), \
+         patch("mydot.actions.subprocess.run") as mock_run:
+        ChangeDir(dotfiles).run()
+
+    shell_call = mock_run.call_args_list[1]
+    assert shell_call == call(["/bin/zsh"], cwd=expected_dir)
+
+
+def test_cd_returns_target_dir(clean_repo, monkeypatch):
+    """ChangeDir.run() should return the resolved parent directory."""
+    dotfiles = clean_repo["df"]
+    worktree = clean_repo["worktree"]
+    monkeypatch.setenv("SHELL", "/bin/sh")
+    monkeypatch.delenv("MYDOT_CD_CMD", raising=False)
+    _ = dotfiles.list_all
+
+    expected_dir = (worktree / "fileA").resolve().parent
+
+    with patch("pydymenu.fzf", return_value=["fileA"]), \
+         patch("mydot.actions.subprocess.run"):
+        result = ChangeDir(dotfiles).run()
+
+    assert result == expected_dir
