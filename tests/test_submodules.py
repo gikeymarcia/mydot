@@ -104,3 +104,28 @@ def test_resolve_git_dir_file_pointer(submodule_repo):
     result = dotfiles._resolve_submodule_git_dir("config/tmux")
     assert result is not None
     assert result.is_dir()
+
+
+# -- Staged (uncommitted) submodule tests --
+
+
+def test_staged_submodule_entries_detected(staged_submodule_repo):
+    """_submodule_entries() should find submodules that are staged but not committed."""
+    dotfiles = staged_submodule_repo["df"]
+    entries = dotfiles._submodule_entries()
+    assert "config/tmux" in entries
+
+
+def test_staged_submodule_files_listed(staged_submodule_repo):
+    """submodule_files should include files from a staged-but-uncommitted submodule."""
+    dotfiles = staged_submodule_repo["df"]
+    sub_files = dotfiles.submodule_files
+    assert "config/tmux/tmux.conf" in sub_files
+
+
+def test_staged_list_all_includes_submodule_files(staged_submodule_repo):
+    """list_all should include both regular tracked files and staged submodule files."""
+    dotfiles = staged_submodule_repo["df"]
+    all_files = dotfiles.list_all
+    assert "topfile" in all_files
+    assert "config/tmux/tmux.conf" in all_files

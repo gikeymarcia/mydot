@@ -19,7 +19,7 @@ mydot/
   repository.py      # Repository class: all git queries and cached properties
   actions.py         # Action classes: one per subcommand (EditFiles, Grep, etc.)
   editor.py          # Editor protocol + implementations (Neovim, Vim, Nano, etc.)
-  clip.py            # Clipper protocol + implementations (xclip, xsel, pbcopy)
+  clip.py            # Clipper protocol + implementations (wl-copy, xclip, xsel, pbcopy)
   console.py         # Rich console theming and text formatting
   logging.py         # Logging configuration
   exceptions.py      # Custom exceptions
@@ -82,7 +82,8 @@ Each protocol defines the interface, then concrete classes implement it:
 - `MissingEditor` — prints files and greps when no editor found
 
 **Clipper**: `clip(data)` — sends string to system clipboard
-- `Xclip`, `Xsel`, `Pbcopy` — platform-specific implementations
+- `WlCopy`, `Xclip`, `Xsel`, `Pbcopy` — platform-specific implementations
+  (discovery order favors Wayland first, then X11, then macOS)
 - `NoApp` — prints to terminal as fallback
 
 Discovery functions (`find_editor()`, `find_clipper()`) check `$EDITOR` env and

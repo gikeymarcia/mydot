@@ -39,6 +39,14 @@ class Xsel(Clipper):
         self.success(data)
 
 
+class WlCopy(Clipper):
+    name = "wl-copy"
+
+    def clip(self, data: str):
+        subprocess.run(["wl-copy"], input=data.encode("utf-8"))
+        self.success(data)
+
+
 class Pbcopy(Clipper):
     name = "pbcopy"
 
@@ -59,9 +67,9 @@ def find_clipper() -> Clipper:
     """
     Find a suitable clipboard app and return as a Clipper object.
 
-    Checks: xclip > xsel > pbcopy > terminal print (fallback)
+    Checks: wl-copy > xclip > xsel > pbcopy > terminal print (fallback)
     """
-    for option in [Xclip(), Xsel(), Pbcopy()]:
+    for option in [WlCopy(), Xclip(), Xsel(), Pbcopy()]:
         if option.has_app():
             return option
     else:

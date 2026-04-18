@@ -194,14 +194,15 @@ class Repository:
 
     # Submodules
     def _submodule_entries(self) -> List[str]:
-        """Return relative paths of registered submodules from ls-tree."""
+        """Return relative paths of registered submodules (committed + staged)."""
         output = subprocess.run(
-            self._git_base
-            + ["ls-tree", "--full-tree", "--full-name", "-r", "HEAD", "-z"],
+            self._git_base + ["ls-files", "--stage", "-z"],
             text=True,
             capture_output=True,
         ).stdout.split("\x00")
-        return [row.split("\t")[-1] for row in output if row and row.startswith("160000")]
+        return sorted(
+            row.split("\t")[-1] for row in output if row and row.startswith("160000")
+        )
 
     def _resolve_submodule_git_dir(self, submodule_rel_path: str) -> Optional[Path]:
         """Find the git directory for a submodule on disk."""
