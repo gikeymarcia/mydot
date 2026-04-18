@@ -77,6 +77,7 @@ ease.
 
     d. fzf          # select files and print paths to stdout (for piping)
     d. history      # browse and compare file history
+    d. cd           # navigate to a dotfile's directory in a subshell
 
     d.              # see the help message detailing available commands
     ```
@@ -84,14 +85,24 @@ ease.
 ## Submodule Support
 
 If your dotfiles repo contains git submodules (e.g., `~/.config/tmux`), mydot
-will include their tracked files in `edit`, `fzf`, `clip`, `grep`, `ls`, and
-`export` (up to 2 levels deep).
+will include their tracked files in `edit`, `fzf`, `clip`, `grep`, `ls`, `cd`,
+and `export` (up to 2 levels deep).
 
 **Known limitation:** `d. history` will list submodule files but cannot show
 their per-file commit history. The outer repo only tracks the submodule pointer,
 not individual file changes within the submodule.
 
 ## Going Deeper
+
+### Customizing `d. cd`
+
+By default `d. cd` lists the directory with `ls -lA --color=auto` before
+opening the subshell. Set `MYDOT_CD_CMD` to use a different listing command:
+
+```bash
+export MYDOT_CD_CMD="eza -la"   # use eza
+export MYDOT_CD_CMD="tree -L 2" # use tree
+```
 
 ### Useful aliases
 

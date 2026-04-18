@@ -42,6 +42,28 @@ class EditFiles(Actions):
             return absolute_paths
 
 
+class ChangeDir(Actions):
+    def __init__(self, repo: Repository):
+        self.repo = repo
+
+    def run(self) -> Optional[Path]:
+        selection = pydymenu.fzf(
+            self.repo.list_all,
+            prompt="Pick a file to cd to its directory: ",
+            multi=False,
+            preview=f"{self.repo.preview_app}" + " {}",
+        )
+        if selection is None:
+            sys.exit("No selection made. Cancelling action.")
+        target_dir = (self.repo.work_tree / selection[0]).resolve().parent
+        cd_cmd = os.environ.get("MYDOT_CD_CMD", "ls -lA --color=auto")
+        subprocess.run(cd_cmd.split(), cwd=target_dir)
+        print(f"\nSubshell at {target_dir} — exit to return to {self.repo.run_from}")
+        shell = os.environ.get("SHELL", "/bin/sh")
+        subprocess.run([shell], cwd=target_dir)
+        return target_dir
+
+
 class Clipboard(Actions):
     """Interactively select file paths to copy to the clipboard."""
 
