@@ -4,6 +4,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.10.0] - 2026-04-17
+
+### Added
+
+- Wayland clipboard support: `WlCopy` clipper using `wl-copy`.
+- Clipper discovery now prefers `wl-copy` over X11 clippers
+  (`wl-copy > xclip > xsel > pbcopy > terminal fallback`).
+
+### Fixed
+
+- Staged-but-uncommitted submodules now appear in `list_all`. Previously,
+  `git add`-ing a submodule without committing left it invisible to all
+  pickers (edit, ls, fzf, clip, grep, export, history).
+
 ## [0.9.2] - 2026-04-14
 
 ### Added

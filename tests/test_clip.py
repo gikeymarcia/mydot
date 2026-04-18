@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from mydot.clip import NoApp, Pbcopy, Xclip, Xsel, find_clipper
+from mydot.clip import NoApp, Pbcopy, WlCopy, Xclip, Xsel, find_clipper
 
 
 def _mock_which(available):
@@ -10,7 +10,13 @@ def _mock_which(available):
     return which
 
 
-def test_find_clipper_xclip():
+def test_find_clipper_wlcopy_first():
+    with patch("mydot.clip.shutil.which", _mock_which(["wl-copy", "xclip", "xsel", "pbcopy"])):
+        result = find_clipper()
+    assert isinstance(result, WlCopy)
+
+
+def test_find_clipper_xclip_when_no_wlcopy():
     with patch("mydot.clip.shutil.which", _mock_which(["xclip", "xsel", "pbcopy"])):
         result = find_clipper()
     assert isinstance(result, Xclip)

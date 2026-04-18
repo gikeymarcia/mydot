@@ -262,6 +262,57 @@ def submodule_repo(tmp_path):
     }
 
 
+@pytest.fixture
+def staged_submodule_repo(tmp_path):
+    """A bare repo with a submodule staged but NOT committed."""
+    import os
+
+    bare = tmp_path / "bare"
+    worktree = tmp_path / "worktree"
+    bare.mkdir()
+    worktree.mkdir()
+    sp.run(["git", "init", "--bare", bare], capture_output=True)
+
+    def parent_git(*args):
+        cmd = ["git", f"--git-dir={bare}", f"--work-tree={worktree}"]
+        return sp.run(cmd + list(args), capture_output=True, text=True)
+
+    parent_git("config", "protocol.file.allow", "always")
+
+    # Create a regular file and commit it (so HEAD exists)
+    top_file = worktree / "topfile"
+    top_file.write_text("top level file\n")
+    parent_git("add", str(top_file))
+    parent_git("commit", "-m", "add topfile")
+
+    # Create an outer submodule origin
+    outer_origin = tmp_path / "outer_origin"
+    outer_origin.mkdir()
+    sp.run(["git", "init", outer_origin], capture_output=True)
+    (outer_origin / "tmux.conf").write_text("set -g mouse on\n")
+    sp.run(["git", "add", "tmux.conf"], capture_output=True, cwd=outer_origin)
+    sp.run(["git", "commit", "-m", "outer init"], capture_output=True, cwd=outer_origin)
+
+    # Add outer submodule to parent — stage but do NOT commit
+    env = os.environ.copy()
+    env["GIT_DIR"] = str(bare)
+    env["GIT_WORK_TREE"] = str(worktree)
+    sp.run(
+        ["git", "-c", "protocol.file.allow=always",
+         "submodule", "add", str(outer_origin), "config/tmux"],
+        capture_output=True, cwd=worktree, env=env,
+    )
+    parent_git("add", "-A")
+    # Deliberately NO commit here — submodule is staged only
+
+    return {
+        "bare": bare,
+        "worktree": worktree,
+        "git": parent_git,
+        "df": mydot.Repository(bare, worktree),
+    }
+
+
 def appears_in(fake: dict, keys: Union[List[str], str]) -> List[str]:
     """Filters a fake repo return object by given keys."""
     filters = [keys] if isinstance(keys, str) else keys
