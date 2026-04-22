@@ -129,3 +129,15 @@ def test_staged_list_all_includes_submodule_files(staged_submodule_repo):
     all_files = dotfiles.list_all
     assert "topfile" in all_files
     assert "config/tmux/tmux.conf" in all_files
+
+
+# -- File staged (uncommitted) INSIDE a submodule --
+
+
+def test_staged_file_inside_submodule_listed(submodule_with_staged_inner_file):
+    """A file staged (but not committed) inside a submodule should appear."""
+    dotfiles = submodule_with_staged_inner_file["df"]
+    assert "config/tmux/new-staged.conf" in dotfiles.submodule_files
+    assert "config/tmux/new-staged.conf" in dotfiles.list_all
+    # Sanity: committed file in the submodule is still listed.
+    assert "config/tmux/tmux.conf" in dotfiles.submodule_files

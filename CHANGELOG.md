@@ -4,6 +4,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.12.0] - 2026-04-22
+
+### Fixed
+
+- Files staged with `git add` *inside* a submodule (but not yet committed by
+  the inner git) now appear in `list_all`. Previously `_list_submodule_files`
+  ran `git ls-tree HEAD` inside each submodule, which ignored the submodule's
+  index — so a file you'd staged in the submodule was invisible to `d. edit`
+  until you committed it. Now it reads `git ls-files --stage`, matching the
+  picker's "files you could edit" semantics.
+
 ## [0.11.0] - 2026-04-18
 
 ### Added
