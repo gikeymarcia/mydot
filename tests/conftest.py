@@ -263,6 +263,27 @@ def submodule_repo(tmp_path):
 
 
 @pytest.fixture
+def submodule_with_staged_inner_file(submodule_repo):
+    """A submodule_repo where a new file has been `git add`-ed inside the
+    submodule but not yet committed by the inner git.
+
+    Models the real-world workflow:
+      1. cd into submodule
+      2. create a file
+      3. git add it (inside the submodule)
+      4. return to parent — the file should still show up in d. edit
+    """
+    worktree = submodule_repo["worktree"]
+    sub_dir = worktree / "config" / "tmux"
+    new_file = sub_dir / "new-staged.conf"
+    new_file.write_text("set -g prefix C-a\n")
+    # Stage it inside the submodule — NO commit.
+    sp.run(["git", "add", "new-staged.conf"], capture_output=True, cwd=sub_dir, check=True)
+    submodule_repo["df"].freshen()
+    return submodule_repo
+
+
+@pytest.fixture
 def staged_submodule_repo(tmp_path):
     """A bare repo with a submodule staged but NOT committed."""
     import os

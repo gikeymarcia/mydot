@@ -226,7 +226,7 @@ class Repository:
         sub_work_tree = self.work_tree / submodule_rel_path
         sub_git_base = ["git", f"--git-dir={git_dir}", f"--work-tree={sub_work_tree}"]
         result = subprocess.run(
-            sub_git_base + ["ls-tree", "--full-tree", "--full-name", "-r", "HEAD", "-z"],
+            sub_git_base + ["ls-files", "--stage", "-z"],
             text=True,
             capture_output=True,
         )
