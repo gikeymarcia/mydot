@@ -20,3 +20,6 @@
 
 - [ ] Make `d. history` work for submodule files (query the submodule's own git log)
 - [ ] Record asciinema demos for each subcommand
+- [ ] Replace `python -m mydot` usage hints with `d.` — it's the alias
+      everyone actually uses. Touches `mydot/__main__.py` argparse `prog`,
+      `docs/watch.md`, `docs/ideas.md`, and the `docs/bugs/0001` note.

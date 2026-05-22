@@ -78,6 +78,8 @@ ease.
     d. fzf          # select files and print paths to stdout (for piping)
     d. history      # browse and compare file history
     d. cd           # navigate to a dotfile's directory in a subshell
+    d. watch        # lazygit-style TUI: live status, stage (s), commit (c)
+                    # see docs/watch.md for full keybindings + config
 
     d.              # see the help message detailing available commands
     ```

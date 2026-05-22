@@ -4,6 +4,54 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.13.0] - 2026-05-21
+
+### Added
+
+- `watch` subcommand: a lazygit-style Textual TUI. Left pane lists files
+  with uncommitted changes; right pane shows the colored diff for the
+  highlighted file. Polls `git` once per second so you can leave it open
+  in a tmux pane while editing elsewhere. Full reference in
+  [`docs/watch.md`](docs/watch.md).
+- Keybindings:
+  - **Navigation**: `j`/`k`/`↑`/`↓`, `gg` (top), `G` (bottom), `tab`
+    (toggle list ↔ diff pane). `j`/`k`/`gg`/`G` route to whichever pane
+    has focus.
+  - **Staging**: `s` stage, `u` unstage, `space` toggle.
+  - **File ops**: `e` / `Enter` opens in `$EDITOR` (reuses `find_editor()`
+    from `d. edit`); `yy` yanks the absolute path to the clipboard
+    (reuses `find_clipper()` from `d. clip`).
+  - **Commit**: `c` suspends the TUI and shells out to plain `git commit`
+    so your full `.gitconfig` editor flow fires (`commit.template`,
+    `commit.verbose`, `commit.cleanup`, `prepare-commit-msg` /
+    `commit-msg` hooks, GPG signing with TTY passphrase, aliases).
+  - **Misc**: `r` refresh, `?` help modal, `q` quit.
+- Three file states with distinct markers and colors:
+  - `○` unstaged (red)
+  - `●` staged (green)
+  - `◐` partial — staged + further worktree edits, git "MM" status;
+    red with green `[partially staged]` suffix.
+- Row order is alphabetically stable: staging/unstaging never shuffles
+  the cursor.
+- File entries colored by state: unstaged in `$error` (red), staged in
+  `$success` (green). Colors come from the active Textual theme — switch
+  themes live with `Ctrl+P` → "Change theme". Catppuccin Mocha is the
+  default; all 20 of Textual's built-in themes (Dracula, Nord, Gruvbox,
+  Tokyo Night, Solarized, Rose Pine, etc.) work out of the box.
+- Window title shows the current branch with a Nerd Font branch glyph
+  and the remote URL only when one is configured. Set `nerd_fonts = false`
+  to drop the glyph from the default (handy on terminals without a Nerd
+  Font installed). Title is also customizable via the `title_format` key
+  with `{branch}` / `{remote}` / `{remote_suffix}` placeholders (the
+  suffix expands to `" ({remote})"` only if a remote exists):
+
+  ```ini
+  [watch]
+  nerd_fonts   = true
+  title_format = mydot --  {branch}{remote_suffix}
+  theme        = catppuccin-mocha
+  ```
+
 ## [0.12.0] - 2026-04-22
 
 ### Fixed

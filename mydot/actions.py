@@ -329,6 +329,17 @@ class Restore(Actions):
             sys.exit("No selection made. No files will be unstaged.")
 
 
+class WatchTui(Actions):
+    """Launch the lazygit-style Textual TUI."""
+
+    def __init__(self, repo: Repository):
+        self.repo = repo
+
+    def run(self) -> None:
+        from mydot.watch import WatchApp
+        WatchApp(self.repo).run()
+
+
 class DiscardChanges(Actions):
     def __init__(self, repo: Repository) -> None:
         self.repo = repo

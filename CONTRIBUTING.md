@@ -17,20 +17,25 @@ mydot/
   __init__.py        # exports Repository, console, __version__
   __main__.py        # CLI entry point: argparse + match/case dispatch
   repository.py      # Repository class: all git queries and cached properties
-  actions.py         # Action classes: one per subcommand (EditFiles, Grep, etc.)
+  actions.py         # Action classes: one per subcommand (EditFiles, ChangeDir, Grep, etc.)
   editor.py          # Editor protocol + implementations (Neovim, Vim, Nano, etc.)
   clip.py            # Clipper protocol + implementations (wl-copy, xclip, xsel, pbcopy)
   console.py         # Rich console theming and text formatting
+  config.py          # WatchConfig: ~/.config/mydot/config.ini loader
+  watch.py           # `d. watch`: Textual lazygit-style TUI
   logging.py         # Logging configuration
   exceptions.py      # Custom exceptions
 tests/
   conftest.py        # Shared fixtures: fake_repo, clean_repo, submodule_repo
   test_actions.py    # Action class tests
   test_repository.py # Repository property tests
+  test_repository_watch.py  # branch_name / remote_url / diff_for / stage / unstage / commit_*
   test_submodules.py # Submodule file listing tests
   test_freshen.py    # Cache invalidation tests
   test_editor.py     # Editor discovery and search parameter tests
   test_clip.py       # Clipper discovery tests
+  test_config.py     # WatchConfig loader tests
+  test_watch_tui.py  # Textual Pilot tests for `d. watch`
 scripts/
   venv-create.sh     # Create a .venv
   test.sh            # Run pytest with passthrough args
@@ -39,6 +44,7 @@ scripts/
   bump.sh            # Version bumping with bump-my-version
 docs/
   development.md     # Full dev setup and workflow guide
+  watch.md           # User reference for the `d. watch` TUI
   TODO.md            # Feature roadmap
 ```
 
@@ -58,6 +64,15 @@ for different views of the file tree:
 
 Properties use `@cached_property` and are invalidated by `freshen()`, which pops
 entries from `__dict__`. Call `freshen()` after any action that mutates git state.
+
+Mutation + introspection helpers (used by `d. watch`, callable directly):
+
+- `branch_name()` / `remote_url(remote="origin")` — for window titles, headers
+- `diff_for(path, staged=False, color=True)` — colored diff for one file
+- `stage(path)` / `unstage(path)` — single-file git add / restore --staged
+- `commit_interactive()` — runs plain `git commit` (no -F, no -m) so the user's
+  `.gitconfig` editor flow fires (`commit.template`, `commit.verbose`, hooks,
+  GPG signing). Caller must release the TTY first (e.g. `App.suspend()`).
 
 ### Actions (`actions.py`)
 
@@ -163,6 +178,49 @@ Add the new subcommand to the usage section in `README.md`.
 scripts/test.sh
 ```
 
+## Adding a Textual TUI subcommand
+
+The fzf-based pattern above is the default for picker-style commands. For
+full-screen interactive TUIs, follow `d. watch` (in `mydot/watch.py`) as
+the template:
+
+1. **Build the app** in its own module so the heavy Textual import stays
+   out of CLI startup. Import it inside the Action's `run()`:
+
+    ```python
+    class WatchTui(Actions):
+        def __init__(self, repo): self.repo = repo
+        def run(self):
+            from mydot.watch import WatchApp
+            WatchApp(self.repo).run()
+    ```
+
+2. **Live off Textual's theme system.** Reference built-in palette
+   variables (`$error`, `$success`, `$surface-lighten-1`, `$accent`) in
+   CSS rather than hard-coding hex. Users switch palettes live via
+   `Ctrl+P → Change theme`; honour the configured default from
+   `WatchConfig.theme` by setting `self.theme = self.cfg.theme` in
+   `__init__`.
+
+3. **Verify color contrast** with `wcag-contrast-ratio` if you introduce
+   custom colors. Aim for 4.5:1 normal text, 3:1 for bold/large. Test
+   both against the default background **and** the highlighted-row
+   background — they're not the same.
+
+4. **Test with Textual's Pilot harness.** See `tests/test_watch_tui.py`:
+   wrap an `asyncio.run` around `app.run_test()` and drive with
+   `pilot.press("s")` etc. Set `poll_seconds=0` to disable timers in
+   tests. `App.suspend()` raises `SuspendNotSupported` under Pilot — if
+   the action under test uses it, monkeypatch it to a no-op context
+   manager.
+
+5. **Shell out to git for editor-driven workflows.** When you need
+   `$EDITOR`, prefer letting git invoke it (e.g. `git commit` with no
+   `-F`, no `-m`) so user `.gitconfig` (`commit.template`,
+   `commit.verbose`, `prepare-commit-msg` hooks, GPG TTY prompts)
+   continues to work. Wrap the shell-out in `App.suspend()` to free the
+   terminal.
+
 ## Adding a New Editor
 
 1. Create a class in `editor.py` implementing the `Editor` protocol
@@ -188,8 +246,13 @@ git operations. Key fixtures in `conftest.py`:
 - **`fake_repo`** — a repo with modified, staged, deleted, renamed, and added
   files. Use `appears_in()` to filter by tags like `"tracked"`, `"staged"`, etc.
 - **`clean_repo`** — three committed files, no modifications
-- **`submodule_repo`** — real git repos (bare + submodule) created in temp dirs;
-  tests actual submodule file listing
+- **`submodule_repo`** — real git repos (bare + submodule, nested to depth=2)
+  created in temp dirs; tests actual submodule file listing
+- **`staged_submodule_repo`** — submodule is `git add`-ed to the parent but
+  not committed yet (parent has no commit pinning the submodule SHA)
+- **`submodule_with_staged_inner_file`** — submodule is committed, but a new
+  file has been `git add`-ed *inside* the submodule without committing there;
+  models the workflow that drove the 0.12.0 fix
 
 ### Mocking fzf
 
