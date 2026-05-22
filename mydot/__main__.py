@@ -20,6 +20,7 @@ from mydot.actions import (
     Restore,
     RunExecutable,
     EditFiles,
+    WatchTui,
 )
 from mydot.console import my_theme, rich_text
 
@@ -63,6 +64,7 @@ def main():
     subparsers.add_parser("clip", help="Copy absolute paths to clipboard")
     subparsers.add_parser("fzf", help="Select file(s) and print paths to stdout")
     subparsers.add_parser("history", help="Browse file history and compare versions")
+    subparsers.add_parser("watch", help="Lazygit-style TUI: stage and commit changes")
 
     git_parser = subparsers.add_parser("git", help="Pass commands to git")
     git_parser.add_argument("args", nargs=argparse.REMAINDER)
@@ -99,6 +101,8 @@ def main():
             FzfSelector(dotfiles).run()
         case "history":
             History(dotfiles).run()
+        case "watch":
+            WatchTui(dotfiles).run()
         case "git":
             logging.debug(f'git command: {sys.argv[2:]}')
             GitPassthrough(dotfiles, sys.argv[2:]).run()

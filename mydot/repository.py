@@ -275,6 +275,61 @@ class Repository:
             if os.access(e, os.X_OK)
         ]
 
+    # Watch TUI helpers
+    def branch_name(self) -> str:
+        result = subprocess.run(
+            self._git_base + ["branch", "--show-current"],
+            text=True,
+            capture_output=True,
+        )
+        return result.stdout.strip()
+
+    def remote_url(self, remote: str = "origin") -> str:
+        result = subprocess.run(
+            self._git_base + ["remote", "get-url", remote],
+            text=True,
+            capture_output=True,
+        )
+        if result.returncode != 0:
+            return ""
+        return result.stdout.strip()
+
+    def diff_for(self, path: str, staged: bool = False, color: bool = True) -> str:
+        cmd = self._git_base + ["diff", "--minimal"]
+        cmd.append("--color=always" if color else "--no-color")
+        if staged:
+            cmd.append("--cached")
+        cmd += ["--", path]
+        result = subprocess.run(cmd, text=True, capture_output=True)
+        return result.stdout
+
+    def stage(self, path: str) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            self._git_base + ["add", "--", path],
+            text=True,
+            capture_output=True,
+        )
+
+    def unstage(self, path: str) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            self._git_base + ["restore", "--staged", "--", path],
+            text=True,
+            capture_output=True,
+        )
+
+    def commit_interactive(self) -> subprocess.CompletedProcess:
+        """Run `git commit` and let git launch $GIT_EDITOR itself.
+
+        This honors commit.template, commit.verbose, commit.cleanup,
+        prepare-commit-msg / commit-msg hooks, and any other editor-mode
+        behavior configured in the user's .gitconfig — none of which fire
+        when a message is supplied via -F.
+
+        Inherits stdio so git can drive the terminal: the caller must have
+        already released it (e.g. via App.suspend()).
+        """
+        return subprocess.run(self._git_base + ["commit"])
+
     @cached_property
     def preview_app(self) -> str:
         """Return: bat > batcat > highlight > cat."""
