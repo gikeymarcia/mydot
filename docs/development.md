@@ -50,7 +50,7 @@ scripts/bump.sh minor     # 0.8.0 → 0.9.0
 scripts/bump.sh major     # 0.8.0 → 1.0.0
 ```
 
-This creates a git tag (`v0.8.1`, etc.) but does not auto-commit (configured in `.bumpversion.toml`).
+Does not commit or create a tag (configured in `.bumpversion.toml`).
 
 ## Building and Publishing
 
@@ -109,8 +109,13 @@ scripts/test-watch.sh       # in a separate terminal
 
 # 3. When ready to release
 scripts/test.sh             # final check
-scripts/bump.sh patch       # bump version
-git push                    # push changes + tag
+scripts/bump.sh patch       # edit version files (no commit, no tag)
+git commit -am "vX.Y.Z"     # commit the bump
+git push                    # push the branch (no tag yet)
+# merge request the branch onto master (squash)
+git checkout master && git pull
+git tag vX.Y.Z              # tag the squash-merge commit on master
+git push --tags
 
 # 4. Publish
 scripts/build.sh test       # verify on test.pypi.org

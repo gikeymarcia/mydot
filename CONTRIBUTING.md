@@ -279,11 +279,15 @@ scripts/test-watch.sh        # re-run on file changes (TDD mode)
 1. Add an entry to `CHANGELOG.md` under a new `## [X.Y.Z] - YYYY-MM-DD` section
    summarizing user-visible changes. Do this **before** bumping — the bump
    commit should include the changelog entry.
-2. `scripts/bump.sh {major|minor|patch}` — runs `bump-my-version` which
-   updates `mydot/__init__.py`, `setup.py`, and `.bumpversion.toml`, and
-   creates a `vX.Y.Z` tag.
-3. Open an MR from a release branch to `master` (master is protected).
-4. After merge: `scripts/build.sh test` to stage on test.pypi.org, verify the
+2. `scripts/bump.sh {major|minor|patch}` — runs `bump-my-version`, which
+   updates `mydot/__init__.py`, `setup.py`, and `.bumpversion.toml`. It does
+   **not** commit or tag (both disabled in `.bumpversion.toml`); commit the
+   version bump yourself.
+3. Open an MR from the branch to `master` (master is protected) and
+   squash-merge it.
+4. Tag the squash-merge commit on `master` and push the tag:
+   `git checkout master && git pull && git tag vX.Y.Z && git push --tags`.
+5. Publish: `scripts/build.sh test` to stage on test.pypi.org, verify the
    page at `https://test.pypi.org/project/mydot/X.Y.Z/`, then
    `scripts/build.sh pypi` for the real release.
 

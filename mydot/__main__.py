@@ -112,4 +112,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-# vim: foldlevel=0:
+# vim: foldlevel=4:

@@ -82,4 +82,4 @@ def test_restorables(fake_repo):
     assert dotfiles.restorables == restorable
 
 
-# vim: foldlevel=1:
+# vim: foldlevel=4:

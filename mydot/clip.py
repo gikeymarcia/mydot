@@ -76,4 +76,4 @@ def find_clipper() -> Clipper:
         return NoApp()
 
 
-# vim: foldlevel=0:
+# vim: foldlevel=4:

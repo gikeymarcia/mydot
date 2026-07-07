@@ -4,6 +4,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.13.1] - 2026-07-02
+
+### Fixed
+
+- `d. grep` (and `d. edit`) now apply the search term when `$EDITOR` is an
+  absolute path such as macOS/Homebrew's `/opt/homebrew/bin/nvim`.
+  `find_editor()` matched `$EDITOR` literally, so a full path fell through
+  to the generic `UserDefinedEditor`, which silently drops the search
+  argument — nvim opened but the search never applied. It now matches on
+  the basename, so any path ending in `nvim`/`vim`/`nano` maps to the
+  built-in class that supports search.
+
 ## [0.13.0] - 2026-05-21
 
 ### Added

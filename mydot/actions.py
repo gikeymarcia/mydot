@@ -369,4 +369,4 @@ class DiscardChanges(Actions):
         self.result = discards
 
 
-# vim: foldlevel=1 :
+# vim: foldlevel=4 :

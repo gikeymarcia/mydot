@@ -28,7 +28,7 @@ ease.
 2. **Initialize dotfiles repository:**
 
     ```bash
-    # reload shell configu
+    # reload shell configuration
     source ~/.bashrc            # if using bash
     source ~/.zshrc             # if using zsh
 

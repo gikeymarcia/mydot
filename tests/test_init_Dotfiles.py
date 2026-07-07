@@ -37,4 +37,4 @@ def test_missing_DOTFILES_in_env(monkeypatch):
     assert except_info.type is MissingRepositoryLocation
 
 
-# vim: foldlevel=1:
+# vim: foldlevel=4:

@@ -343,4 +343,4 @@ class Repository:
             return "cat"
 
 
-# vim: foldlevel=1 :
+# vim: foldlevel=4 :

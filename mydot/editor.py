@@ -121,8 +121,12 @@ def find_editor() -> Editor:
     env = os.getenv("EDITOR", None)
     logging.debug(f"env EDITOR={env}")
     if env:
-        if env in opts:
-            return opts[env]
+        # EDITOR may be an absolute path (e.g. macOS/Homebrew sets
+        # /opt/homebrew/bin/nvim); match on the basename so it still maps to
+        # a built-in class that supports the search parameter.
+        ed_basename = Path(env).name
+        if ed_basename in opts:
+            return opts[ed_basename]
         else:
             return UserDefinedEditor(env)
     editors_to_try = ["nvim", "vim", "nano", "kate", "gedit"]
@@ -139,4 +143,4 @@ def find_editor() -> Editor:
         return MissingEditor()
 
 
-# vim: foldlevel=0:
+# vim: foldlevel=4:

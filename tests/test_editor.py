@@ -41,6 +41,25 @@ class TestFindEditorWithEnv:
         assert isinstance(result, UserDefinedEditor)
         assert result.program == "emacs"
 
+    def test_editor_env_nvim_full_path(self, monkeypatch):
+        # macOS/Homebrew commonly sets EDITOR to an absolute path; the basename
+        # should still resolve to the built-in class so search is supported.
+        monkeypatch.setenv("EDITOR", "/opt/homebrew/bin/nvim")
+        result = find_editor()
+        assert isinstance(result, Neovim)
+
+    def test_editor_env_vim_full_path(self, monkeypatch):
+        monkeypatch.setenv("EDITOR", "/usr/bin/vim")
+        result = find_editor()
+        assert isinstance(result, Vim)
+
+    def test_editor_env_custom_full_path(self, monkeypatch):
+        # An absolute path to an unknown editor keeps the full path as the program.
+        monkeypatch.setenv("EDITOR", "/usr/local/bin/emacs")
+        result = find_editor()
+        assert isinstance(result, UserDefinedEditor)
+        assert result.program == "/usr/local/bin/emacs"
+
 
 class TestFindEditorFallback:
     """Tests for find_editor() falling back through $PATH search."""
